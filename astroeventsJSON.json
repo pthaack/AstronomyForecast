@@ -1,0 +1,75 @@
+{
+	'LOCATION': {
+		'latitude':-90,
+		'longitude':43
+	},
+	'NIGHT': {
+		'start':'2017-08-21 20h10',
+		'finish':'2017-08-22 06h10'
+	},
+	'EVENT': {
+		'eventname': 'total solar eclipse',
+		'type':'meteorlogical',
+		'timestart':'2017-08-21 13h10',
+		'timefinish':'2017-08-21 15h30',
+		'requirements':{
+			'cloud cover':1
+		},
+		'position':{
+			'ra':11.9827777778,
+			'decl':3.6430555556
+		}
+	},
+	'OCCURANCE': {
+		'eventname': 'minimum of Algol waning',
+		'type':'astronomical',
+		'timestart':1503061200,
+		'timefinish':1503061200
+		'requirements':{
+			'cloud cover':1
+		},
+		'position':{
+			'ra':3.1361333333,
+			'decl':40.95555
+		}
+	},
+	'OCCURANCE': {
+		'eventname': 'minimum of Algol waxing',
+		'type':'astronomical',
+		'timestart':1503061200,
+		'timefinish':1503061200
+		'requirements':{
+			'cloud cover':1
+		},
+		'position':{
+			'ra':3.1361333333,
+			'decl':40.95555
+		}
+	},
+	'EVENT': {
+		'eventname': 'aurora',
+		'type':'meteorlogical',
+		'timestart':'2017-08-21 13h10',
+		'timefinish':'2017-08-21 15h30',
+		'requirements':{
+			'cloud cover':1
+		},
+		'position':{
+			'ra':11.9827777778,
+			'decl':3.6430555556
+		}
+	},
+	'VISIBLE': {
+		'eventname': 'Jupiter',
+		'type':'astronomical',
+		'timestart':1503061200,
+		'timefinish':1503061200
+		'requirements':{
+			'cloud cover':1
+		},
+		'position':{
+			'ra':3.1361333333,
+			'decl':40.95555
+		}
+	}
+}﻿
