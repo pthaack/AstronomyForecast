@@ -1,8 +1,8 @@
 <?php
 /* **************************************************
-*********************
-*  Offline version  *
-*********************
+								*********************
+								*  Online version   *
+								*********************
 
 Report if the next night is good for viewing stars, 
 and what to look for, expressed as XML.
@@ -104,6 +104,9 @@ define('TIMEMORN', '04h00');
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+
+include 'MoonPhase.php';
+include 'dxprog.php';
 
 class Location {
 /*
@@ -537,6 +540,7 @@ Weather Map
 				$this->strObservatory = $obs;
 				break;
 			default: 
+
 				// Unknown observatory. No map for you
 				$this->imgMap = imagecreate( 10, 10 );
 				$this->strURL = 'N/A';
@@ -889,6 +893,18 @@ echo '  </suntimes>' . chr(13) . chr(10);
 
 //	+ moonrise
 //	+ moonset
+$moonphase = new Solaris\MoonPhase( $location->get_opposition() );
+$moonriset = new MoonRiSet();
+$moonrise = $moonriset->calculateMoonTimes(date('m', $moonphase->phase()>.25?$location->get_sunset():$location->get_sunrise() ), date('d', $moonphase->phase()>.25?$location->get_sunset():$location->get_sunrise() ), date('Y', $moonphase->phase()>.25?$location->get_sunset():$location->get_sunrise() ), $location->geoposition()[ LATITUDE ], $location->geoposition()[ LONGITUDE ])->moonrise;
+$moonset = $moonriset->calculateMoonTimes(date('m', $moonphase->phase()<=.25?$location->get_sunset():$location->get_sunrise() ), date('d', $moonphase->phase()<=.25?$location->get_sunset():$location->get_sunrise() ), date('Y', $moonphase->phase()<=.25?$location->get_sunset():$location->get_sunrise() ), $location->geoposition()[ LATITUDE ], $location->geoposition()[ LONGITUDE ])->moonset;
+echo '  <moontimes>' . chr(13) . chr(10);
+echo '   <moonrise atomic="'.$moonrise.'">'. date('H\hi',$moonrise) .'</moonrise>' . chr(13) . chr(10);
+echo '   <phase>'. $moonphase->phase() .'</phase>' . chr(13) . chr(10);
+echo '   <illum>'. $moonphase->illumination() .'</illum>' . chr(13) . chr(10);
+echo '   <phasename>'. $moonphase->phase_name() .'</phasename>' . chr(13) . chr(10);
+echo '   <moonset atomic="'.$moonset.'">'. date('H\hi',$moonset) .'</moonset>' . chr(13) . chr(10);
+echo '  </moontimes>' . chr(13) . chr(10);
+
 
 echo ' </observatory>' . chr(13) . chr(10);
 
@@ -920,6 +936,7 @@ $intTemperatureAverage = [ AVGEVENING => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVG
 //TODO: daytime events
 foreach( $arrHours AS $hourkey => $hourval ) {
   if( $hourkey >= $strDusk && $hourkey <= $strDawn ) {
+	echo ' <hour time="'. $hourval[HRTIME] .'">' . chr(13) . chr(10);
 	$intCloudCoverRating = -1;
 	$intTransparencyRating = -1;
 	$intSeeingRating = -1;
@@ -936,11 +953,11 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 	  case 'temperature':
 		$map = new Weather_Map( $location->observatory(), $night->get_date(), $hourkey, $mapval );
 		// TODO: MIME an image?
-		echo ' <map>' . chr(13) . chr(10);
-		echo '  <local>' . $map->local() . '</local>' . chr(13) . chr(10);
-		echo '  <remote>' . $map->url() . '</remote>' . chr(13) . chr(10);
+		echo '  <map mapval="'. $mapval .'">' . chr(13) . chr(10);
+		echo '   <local>' . $map->local() . '</local>' . chr(13) . chr(10);
+		echo '   <remote>' . $map->url() . '</remote>' . chr(13) . chr(10);
 		// TODO: echo '  <files>' . print_r( $map->files() ) . '</files>' . chr(13) . chr(10);
-		echo ' </map>' . chr(13) . chr(10);
+		echo '  </map>' . chr(13) . chr(10);
 		
 		switch( $mapval ){
 		case 'northeast':
@@ -953,11 +970,11 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 			$weather = new Weather_Analysis( $map->local(), $location->map2coordinates()[XNORTHAMERICA], $location->map2coordinates()[YNORTHAMERICA], $mapval );
 			break;
 		}
-		echo ' <weather>' . chr(13) . chr(10);
-		echo '  <colour>' . $weather->get_colour() . '</colour>' . chr(13) . chr(10);
-		echo '  <text>' . $weather->get_text() . '</text>' . chr(13) . chr(10);
-		echo '  <rating>' . $weather->get_rating() . '</rating>' . chr(13) . chr(10);
-		echo ' </weather>' . chr(13) . chr(10);
+		echo '  <weather mapval="'. $mapval .'">' . chr(13) . chr(10);
+		echo '   <colour>' . $weather->get_colour() . '</colour>' . chr(13) . chr(10);
+		echo '   <text>' . $weather->get_text() . '</text>' . chr(13) . chr(10);
+		echo '   <rating>' . $weather->get_rating() . '</rating>' . chr(13) . chr(10);
+		echo '  </weather>' . chr(13) . chr(10);
 
 //TODO:  Can I see anything?
 		switch( $mapval ) {
@@ -1078,13 +1095,13 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 		$map->flushImage();
 	  } 
 	}
-	echo ' <viewing>' . chr(13) . chr(10) . '   <clock>'. $hourval[HRTIME] .'</clock>' . chr(13) . chr(10);
+	echo '  <viewing>' . chr(13) . chr(10) . '   <clock>'. $hourval[HRTIME] .'</clock>' . chr(13) . chr(10);
 	switch( $intCloudCoverRating ) {
 	case -1:
-		echo '<skies>Unknown</skies>' . chr(13) . chr(10);
+		echo '   <skies>Unknown</skies>' . chr(13) . chr(10);
 		break;
 	case 0:
-		echo '<skies>Overcast</skies>' . chr(13) . chr(10);
+		echo '   <skies>Overcast</skies>' . chr(13) . chr(10);
 		break;
 	case 1:
 	case 2:
@@ -1151,7 +1168,8 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 			break;
 		}
 	}
-	echo ' </viewing>' . chr(13) . chr(10);
+	echo '  </viewing>' . chr(13) . chr(10);
+	echo ' </hour>' . chr(13) . chr(10);
   }	
 }
 echo ' <viewing>' . chr(13) . chr(10);
