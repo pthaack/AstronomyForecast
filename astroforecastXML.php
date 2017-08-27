@@ -65,6 +65,7 @@ Events
 
 //Set timezone for Ottawa, source of government maps
 define('TIMEZONE', 'America/Toronto');
+define('TZUTC', 'UTC');	// Zulu time, GMT in Standard Time 
 define('TZSTD', 'standard');
 define('TZDST', 'daylight');
 define('TZLOCAL', 'localtimezone');	// The time zone as used by the PHP system
@@ -95,6 +96,7 @@ define('CRRATING', 'rating');
 
 define('HRTIME', 'Time');
 define('HRATOM', 'Atomic');
+define('ATOMICHOUR', 3600);
 
 define('AVGEVENING', 'evening');
 define('AVGNIGHT', 'overnight');
@@ -442,6 +444,7 @@ Location
 	public function timeoffset() {
 		return( $this->intTimeZoneOffset );
 	}
+	public function timezone() { return( $this->arrObservatory[$this->strObservatory][ TZLOCAL ] ); }
 
 	public function map() {
 		return( $this->arrObservatory[ $this->strObservatory ][ MAPPARAM ] );
@@ -511,14 +514,13 @@ Night
 - hours	- the list of dusk to dawn hours for all possible locations 
 	(including Iqaluit, Inuvik, and Fairbanks, so noon to noon)
 - moon
-// TODO: subclass that contains only those hours that have events
 
 Time zones in service area
-Newfoundland	-2.5	-3.5
-Atlanti	-3	-4
+Newfld	-2.5	-3.5
+Atlant	-3	-4
 Eastern	-4	-5
 Central	-5	-6
-Mountain	-6	-7
+Mountn	-6	-7
 Pacific	-7	-8
 Alaska	-8	-9
 Hawaii-Aleutian Islands are off the map
@@ -536,17 +538,18 @@ Indiana changed in 2006 to use DST.
 	
 	function __construct( $tz = -4 ) {
 		date_default_timezone_set(TIMEZONE); // Has to be done in Ottawa time zone
-		//$tz=date_offset_get(new DateTime)/3600;
 		$this->strTwelve = (date('H')>=12?'12':'00');
+		// TODO: DELETE echo 'TZ:'. $tz . ' Twv: ' . $this->strTwelve . chr(13).chr(10);
 		for( $intI = 12 -(integer) $this->strTwelve +5; 
 				$intI <= 12 -(integer) $this->strTwelve +9 +24;
 				$intI++ ) {
-			$strHour = substr('00' . (string) $intI, -3);
-			// TODO: echo $strHour .' adjusted time: ' . ($intI + $tz) .chr(13) .chr(10);
+			$strHour = substr('000' . (string) $intI, -3);
+
 			// HRTIME is the Human Readable time in HHhMM
 			$this->arrHours[ $strHour ][HRTIME] = substr('0' . (string)( ($intI + floor($tz))%24>12 ? ($intI + floor($tz))%24 - (integer)$this->strTwelve : ($intI + floor($tz))%24 + (integer)$this->strTwelve ), -2) . ($tz-floor($tz)>0.49?'h30':'h00');
 			$strDateTime = (string)((integer)date('Ymd')+floor(($intI + $tz)/24)).substr($this->arrHours[ $strHour ][HRTIME],0,2).substr($this->arrHours[ $strHour ][HRTIME],3,2).'00';
 			$strDateTime = (string)((integer)date('Ymd')+floor(($intI + $tz)/24)).substr($this->arrHours[ $strHour ][HRTIME],0,2).substr($this->arrHours[ $strHour ][HRTIME],3,2).'00';
+			// Timestamp has to be interpreted in the local time zone, not Ottawa time.
 			$intDateTime = mktime((integer)substr($strDateTime,8,2),
 									(integer)substr($strDateTime,10,2),
 									(integer)substr($strDateTime,12,2),
@@ -554,9 +557,41 @@ Indiana changed in 2006 to use DST.
 									(integer)substr($strDateTime,6,2),
 									(integer)substr($strDateTime,0,4));
 			// HRATOM is the HouR in the timestamp format
-			$this->arrHours[ $strHour ][HRATOM] = $intDateTime;
+			$this->arrHours[ $strHour ][HRATOM] = $intDateTime - $tz*ATOMICHOUR -4*ATOMICHOUR ;
 		}
 		$this->strDate = date('Ymd') . $this->strTwelve;
+	}
+
+	// add extra hours, in case of daytime events
+	public function add_hour( $intTimeStamp ) {
+		// requires that strHour is the ### value (001-048)
+		// requires that the timestamp strHour + TZOFFSET (+12)
+		$arrHrKeys = array_keys($this->arrHours);
+		$arrHrVals = array_values($this->arrHours);
+		if( is_numeric( $intTimeStamp ) ) {
+			if( $intTimeStamp > time() && $intTimeStamp < $arrHrVals[0][HRATOM] || $intTimeStamp > $arrHrVals[ sizeof($arrHrVals)-1 ][HRATOM] + ATOMICHOUR ) {
+				// TODO: DELETE echo 'adding '. $intTimeStamp . ' first: '. $arrHrVals[0][HRATOM] . ' last: '. $arrHrVals[ sizeof($arrHrVals)-1 ][HRATOM] .chr(13) . chr(10);
+				$dte1stHour = new DateTime();
+				$dte1stHour->setTimestamp( $arrHrVals[0][HRATOM] );
+				$dteNewHour = new DateTime();
+				$dteNewHour->setTimestamp( $intTimeStamp );
+				// Calculate UTC equivalent
+				$itvDiff = $dte1stHour->diff($dteNewHour);
+				$intHour = (integer) $arrHrKeys[0] + $itvDiff->format('%h') + $itvDiff->format('%a') * 24;
+				$strHour = substr( '000' . (string)$intHour, -3 );
+				// Delete extra minutes and seconds, taking into account timezone.
+				$intHrTimestamp = $arrHrVals[ sizeof($arrHrVals)-1 ][HRATOM] + ( $intHour - (integer)$arrHrKeys[ sizeof($arrHrVals)-1 ]) * ATOMICHOUR;
+				$dteHrTime = new DateTime();
+				$dteHrTime->setTime( (integer)substr( $arrHrVals[ 0 ][HRTIME], 0, 2 ), (integer)substr( $arrHrVals[ 0 ][HRTIME], 3, 2 ) )->add(DateInterval::createFromDateString( (string)( $intHour -(integer)$arrHrKeys[0] ) .' hours') );
+				$strHrTime = $dteHrTime->format('Ymd H\hi');
+				
+				// TODO: DELETE echo 'adding '. date('Ymd H\hi',$intTimeStamp) . ' str: '. $intTimeStamp . ' Hour: '. $strHrTime .chr(13) . chr(10);
+				if( $intHour <= 48 ) {
+					$this->arrHours[ $strHour ] = [ HRTIME => $dteHrTime->format('H\hi'), HRATOM => $intHrTimestamp ];
+				}				
+			}
+		}
+		return $this->arrHours;
 	}
 
 	// Create hours for noon Iqaluit (05h00Z) to next day noon Fairbanks (09h00Z) 
@@ -1057,12 +1092,49 @@ XML structure
 |     + event description
 */
 echo '<astroforecast>' . chr(13) . chr(10);
+
+/** GET parameters:
+ *    obs: the observatory to be used for this location
+ *    ts: the timestamp for an event to be checked out
+ *    hr: the 24h time for an event to be checked out
+ *    verbose: show your work
+ **/ 
 if( isset( $_GET['obs'] ) ) {
 $location = new Location($_GET['obs']);
 }
 else {
 $location = new Location();
 }
+$blnVerbose = false;
+if( isset( $_GET['verbose'] ) ) $blnVerbose = true;
+$hrEvent = [];
+if( isset( $_GET['ts'] ) ) {
+	// Qualify that the ts is a timestamp
+	if( is_numeric( $_GET['ts'] ) ) {
+		if( (integer) $_GET['ts'] > time() ) {
+			$tzEvent = new DateTimeZone( $location->timezone() ); 
+			$dteEvent = new DateTime; 
+			$dteEvent->setTimestamp( $_GET['ts'] ); 
+			$dteEvent->setTimezone( $tzEvent );
+			$hrEvent[] = [ HRATOM => $dteEvent->getTimestamp(), HRTIME => $dteEvent->format('H\hi') ];
+		}
+	}
+	elseif( is_array( $_GET['ts'] ) ) {
+		foreach( $_GET['ts'] AS $tsVal ) {
+			if( is_numeric( $tsVal ) ) {
+				if( (integer)$tsVal > time() ) {
+					$tzEvent = new DateTimeZone( $location->timezone() ); 
+					$dteEvent = new DateTime; 
+					$dteEvent->setTimestamp( $tsVal ); 
+					$dteEvent->setTimezone( $tzEvent );
+					$hrEvent[] = [ HRATOM => $dteEvent->getTimestamp(), HRTIME => $dteEvent->format('H\hi') ];
+				}
+			}
+		}
+	}
+}
+
+if( $blnVerbose ) {
 echo ' <observatory>' . chr(13) . chr(10);
 echo '  <observatory>'. $location->observatory() .'</observatory>' . chr(13) . chr(10);
 echo '  <latitude>';
@@ -1102,7 +1174,7 @@ echo '   <nauticaltwilightbegins atomic="'.$location->get_nauticaltwilightbegins
 echo '   <civiltwilightbegins atomic="'.$location->get_civiltwilightbegins().'">'. date('H\hi',$location->get_civiltwilightbegins()) .'</civiltwilightbegins>' . chr(13) . chr(10);
 echo '   <sunrise atomic="'.$location->get_sunrise().'">'. date('H\hi',$location->get_sunrise()) .'</sunrise>' . chr(13) . chr(10);
 echo '  </suntimes>' . chr(13) . chr(10);
-	
+}	
 
 //	+ moonrise
 //	+ moonset
@@ -1126,6 +1198,7 @@ $dteTransit->setTimestamp( $location->get_transit() );
 $objMoon = new Moon( $dteTransit, $location );
 $objMoonRise = new Moon( $objMoon->rise(), $location );
 $objMoonSet = new Moon( $objMoon->set(), $location );
+if( $blnVerbose ) {
 echo '  <moontimes>' . chr(13) . chr(10);
 echo '   <moonrise atomic="'.$objMoon->rise()->getTimestamp().'">'. date('Ymd H\hi',$objMoon->rise()->getTimestamp()) .'</moonrise>' . chr(13) . chr(10);
 echo '   <ra radian="'. $objMoonRise->ra() .'">'. ( $objMoonRise->ra() * 12.0 / M_PI) .'</ra>' . chr(13) . chr(10);
@@ -1142,16 +1215,33 @@ echo '  </moontimes>' . chr(13) . chr(10);
 
 
 echo ' </observatory>' . chr(13) . chr(10);
+}
 
 $night = new Night($location->timeoffset());
-echo ' <night>' . chr(13) . chr(10);
 $strFolder = $night->get_date();
-echo '  <date>' . $strFolder . '</date>' . chr(13) . chr(10);
 $arrHours = $night->get_hours();
+foreach( $hrEvent AS $evtKey => $evtVal ) { 
+	$arrHours = $night->add_hour( $evtVal[HRATOM] ); 
+}
+$hrEven = [ HRATOM => $location->get_opposition(), HRTIME => TIMEEVENING ];
+$hrMorn = [ HRATOM => $location->get_opposition(), HRTIME => TIMEMORN ];
+if( $blnVerbose ) {
+echo ' <night>' . chr(13) . chr(10);
+echo '  <date>' . $strFolder . '</date>' . chr(13) . chr(10);
 foreach( $arrHours AS $key => $val ) {
 	echo '  <hour img="'. $key .'">'. $val[HRTIME] .'</hour><atom>'. $val[HRATOM] .'</atom>' . chr(13) . chr(10);
+	if( $val[HRTIME] == TIMEEVENING ) { $hrEven[HRATOM] = $val[HRATOM]; }
+	if( $val[HRTIME] == TIMEMORN ) { $hrMorn[HRATOM] = $val[HRATOM]; }
 }
 echo ' </night>' . chr(13) . chr(10);
+}
+else
+{
+foreach( $arrHours AS $key => $val ) {
+	if( $val[HRTIME] == TIMEEVENING ) { $hrEven[HRATOM] = $val[HRATOM]; }
+	if( $val[HRTIME] == TIMEMORN ) { $hrMorn[HRATOM] = $val[HRATOM]; }
+}
+}
 
 $maps = [ 'northeast', 'northwest', 'southeast', 'southwest', 'transparency', 'seeing', 'wind', 'humidity', 'temperature' ];
 // TODO: dusk to dawn
@@ -1167,11 +1257,25 @@ $intSeeingAverage = [ AVGEVENING => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGNIGHT
 $intWindAverage = [ AVGEVENING => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGNIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGASTROTWILIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGMORN => [ AVGAVERAGE => -1, AVGCOUNT => 0] ];
 $intHumidityAverage = [ AVGEVENING => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGNIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGASTROTWILIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGMORN => [ AVGAVERAGE => -1, AVGCOUNT => 0] ];
 $intTemperatureAverage = [ AVGEVENING => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGNIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGASTROTWILIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGMORN => [ AVGAVERAGE => -1, AVGCOUNT => 0] ];
+foreach( $hrEvent AS $evtKey => $evtVal ) {
+	$intCloudCoverAverage[ $evtKey ] = [ AVGAVERAGE => -1, AVGCOUNT => 0];
+	$intTransparencyAverage[ $evtKey ] = [ AVGAVERAGE => -1, AVGCOUNT => 0];
+	$intSeeingAverage[ $evtKey ] = [ AVGAVERAGE => -1, AVGCOUNT => 0];
+	$intWindAverage[ $evtKey ] = [ AVGAVERAGE => -1, AVGCOUNT => 0];
+	$intHumidityAverage[ $evtKey ] = [ AVGAVERAGE => -1, AVGCOUNT => 0];
+	$intTemperatureAverage[ $evtKey ] = [ AVGAVERAGE => -1, AVGCOUNT => 0];
+}
 
 // TODO: daytime events
 foreach( $arrHours AS $hourkey => $hourval ) {
-  if( $hourkey >= $strDusk && $hourkey <= $strDawn ) {
+  $blnShowMe = $hourkey >= $strDusk && $hourkey <= $strDawn;
+  foreach( $hrEvent AS $evtKey => $evtVal ) {
+	if( $hourval[HRATOM] <= $evtVal[HRATOM] && $hourval[HRATOM]+ATOMICHOUR > $evtVal[HRATOM] ) $blnShowMe = true;
+  }
+  if( $blnShowMe ) {
+if( $blnVerbose ) {
 	echo ' <hour time="'. $hourval[HRTIME] .'">' . chr(13) . chr(10);
+}
 	$intCloudCoverRating = -1;
 	$intTransparencyRating = -1;
 	$intSeeingRating = -1;
@@ -1188,11 +1292,13 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 	  case 'temperature':
 		$map = new Weather_Map( $location->observatory(), $night->get_date(), $hourkey, $mapval );
 		// TODO: MIME an image?
+if( $blnVerbose ) {
 		echo '  <map mapval="'. $mapval .'">' . chr(13) . chr(10);
 		echo '   <local>' . $map->local() . '</local>' . chr(13) . chr(10);
 		echo '   <remote>' . $map->url() . '</remote>' . chr(13) . chr(10);
 		// TODO: echo '  <files>' . print_r( $map->files() ) . '</files>' . chr(13) . chr(10);
 		echo '  </map>' . chr(13) . chr(10);
+}
 		
 		switch( $mapval ){
 		case 'northeast':
@@ -1205,11 +1311,13 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 			$weather = new Weather_Analysis( $map->local(), $location->map2coordinates()[XNORTHAMERICA], $location->map2coordinates()[YNORTHAMERICA], $mapval );
 			break;
 		}
+if( $blnVerbose ) {
 		echo '  <weather mapval="'. $mapval .'">' . chr(13) . chr(10);
 		echo '   <colour>' . $weather->get_colour() . '</colour>' . chr(13) . chr(10);
 		echo '   <text>' . $weather->get_text() . '</text>' . chr(13) . chr(10);
 		echo '   <rating>' . $weather->get_rating() . '</rating>' . chr(13) . chr(10);
 		echo '  </weather>' . chr(13) . chr(10);
+}
 
 // TODO:  Can I see anything?
 		switch( $mapval ) {
@@ -1244,6 +1352,13 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 				// TODO: echo $hourval['Time'] . '  Average:' . $intCloudCoverAverage[ AVGNIGHT ][ AVGAVERAGE ] . '   Count:'. $intCloudCoverAverage[ AVGNIGHT ][ AVGCOUNT ] . chr(13) . chr(10);
 				// TODO: echo $hourval['Time'] . '  Average:' . $intCloudCoverAverage[ AVGMORN ][ AVGAVERAGE ] . '   Count:'. $intCloudCoverAverage[ AVGMORN ][ AVGCOUNT ] . chr(13) . chr(10);
 			}
+			// The same thing, again, for each event.
+			foreach( $hrEvent AS $evtKey => $evtVal ) {
+				if( $hourval[HRATOM] <= $evtVal[HRATOM] && $hourval[HRATOM]+ATOMICHOUR > $evtVal[HRATOM] ) {
+					$intCloudCoverAverage[ $evtKey ][ AVGAVERAGE ] = ( $intCloudCoverAverage[ $evtKey ][ AVGAVERAGE ] * $intCloudCoverAverage[ $evtKey ][ AVGCOUNT ]++ + $intCloudCoverRating ) / $intCloudCoverAverage[ $evtKey ][ AVGCOUNT ];
+				// TODO: DELETE echo $hourval[HRATOM] . '  Average:' . $intCloudCoverAverage[ $evtKey ][ AVGAVERAGE ] . '   Count:'. $intCloudCoverAverage[ $evtKey ][ AVGCOUNT ] . chr(13) . chr(10);
+				}
+			}
 			break;
 		case 'transparency':
 			$intTemperatureRating = $weather->get_rating();
@@ -1259,6 +1374,13 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 			}
 			else {
 				$intTransparencyAverage[ AVGNIGHT ][ AVGAVERAGE ] = ( $intTransparencyAverage[ AVGNIGHT ][ AVGAVERAGE ] * $intTransparencyAverage[ AVGNIGHT ][ AVGCOUNT ]++ + $intTransparencyRating ) / $intTransparencyAverage[ AVGNIGHT ][ AVGCOUNT ];
+			}
+			// The same thing, again, for each event.
+			foreach( $hrEvent AS $evtKey => $evtVal ) {
+				if( $hourval[HRATOM] <= $evtVal[HRATOM] && $hourval[HRATOM]+ATOMICHOUR > $evtVal[HRATOM] ) {
+					$intTransparencyAverage[ $evtKey ][ AVGAVERAGE ] = ( $intTransparencyAverage[ $evtKey ][ AVGAVERAGE ] * $intTransparencyAverage[ $evtKey ][ AVGCOUNT ]++ + $intTransparencyRating ) / $intTransparencyAverage[ $evtKey ][ AVGCOUNT ];
+				// TODO: DELETE echo $hourval[HRATOM] . '  Average:' . $intTransparencyAverage[ $evtKey ][ AVGAVERAGE ] . '   Count:'. $intTransparencyAverage[ $evtKey ][ AVGCOUNT ] . chr(13) . chr(10);
+				}
 			}
 			break;
 		case 'seeing':
@@ -1276,6 +1398,13 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 			else {
 				$intSeeingAverage[ AVGNIGHT ][ AVGAVERAGE ] = ( $intSeeingAverage[ AVGNIGHT ][ AVGAVERAGE ] * $intSeeingAverage[ AVGNIGHT ][ AVGCOUNT ]++ + $intSeeingRating ) / $intSeeingAverage[ AVGNIGHT ][ AVGCOUNT ];
 			}
+			// The same thing, again, for each event.
+			foreach( $hrEvent AS $evtKey => $evtVal ) {
+				if( $hourval[HRATOM] <= $evtVal[HRATOM] && $hourval[HRATOM]+ATOMICHOUR > $evtVal[HRATOM] ) {
+					$intSeeingAverage[ $evtKey ][ AVGAVERAGE ] = ( $intSeeingAverage[ $evtKey ][ AVGAVERAGE ] * $intSeeingAverage[ $evtKey ][ AVGCOUNT ]++ + $intSeeingRating ) / $intSeeingAverage[ $evtKey ][ AVGCOUNT ];
+				// TODO: DELETE echo $hourval[HRATOM] . '  Average:' . $intSeeingAverage[ $evtKey ][ AVGAVERAGE ] . '   Count:'. $intSeeingAverage[ $evtKey ][ AVGCOUNT ] . chr(13) . chr(10);
+				}
+			}
 			break;
 		case 'wind':
 			$intWindRating = $weather->get_rating();
@@ -1291,6 +1420,13 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 			}
 			else {
 				$intWindAverage[ AVGNIGHT ][ AVGAVERAGE ] = ( $intWindAverage[ AVGNIGHT ][ AVGAVERAGE ] * $intWindAverage[ AVGNIGHT ][ AVGCOUNT ]++ + $intWindRating ) / $intWindAverage[ AVGNIGHT ][ AVGCOUNT ];
+			}
+			// The same thing, again, for each event.
+			foreach( $hrEvent AS $evtKey => $evtVal ) {
+				if( $hourval[HRATOM] <= $evtVal[HRATOM] && $hourval[HRATOM]+ATOMICHOUR > $evtVal[HRATOM] ) {
+					$intWindAverage[ $evtKey ][ AVGAVERAGE ] = ( $intWindAverage[ $evtKey ][ AVGAVERAGE ] * $intWindAverage[ $evtKey ][ AVGCOUNT ]++ + $intWindRating ) / $intWindAverage[ $evtKey ][ AVGCOUNT ];
+				// TODO: DELETE echo $hourval[HRATOM] . '  Average:' . $intWindAverage[ $evtKey ][ AVGAVERAGE ] . '   Count:'. $intWindAverage[ $evtKey ][ AVGCOUNT ] . chr(13) . chr(10);
+				}
 			}
 			break;
 		case 'humidity':
@@ -1308,6 +1444,13 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 			else {
 				$intHumidityAverage[ AVGNIGHT ][ AVGAVERAGE ] = ( $intHumidityAverage[ AVGNIGHT ][ AVGAVERAGE ] * $intHumidityAverage[ AVGNIGHT ][ AVGCOUNT ]++ + $intHumidityRating ) / $intHumidityAverage[ AVGNIGHT ][ AVGCOUNT ];
 			}
+			// The same thing, again, for each event.
+			foreach( $hrEvent AS $evtKey => $evtVal ) {
+				if( $hourval[HRATOM] <= $evtVal[HRATOM] && $hourval[HRATOM]+ATOMICHOUR > $evtVal[HRATOM] ) {
+					$intHumidityAverage[ $evtKey ][ AVGAVERAGE ] = ( $intHumidityAverage[ $evtKey ][ AVGAVERAGE ] * $intHumidityAverage[ $evtKey ][ AVGCOUNT ]++ + $intHumidityRating ) / $intHumidityAverage[ $evtKey ][ AVGCOUNT ];
+				// TODO: DELETE echo $hourval[HRATOM] . '  Average:' . $intHumidityAverage[ $evtKey ][ AVGAVERAGE ] . '   Count:'. $intHumidityAverage[ $evtKey ][ AVGCOUNT ] . chr(13) . chr(10);
+				}
+			}
 			break;
 		case 'temperature':
 			$intTemperatureRating = $weather->get_rating();
@@ -1324,12 +1467,20 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 			else {
 				$intTemperatureAverage[ AVGNIGHT ][ AVGAVERAGE ] = ( $intTemperatureAverage[ AVGNIGHT ][ AVGAVERAGE ] * $intTemperatureAverage[ AVGNIGHT ][ AVGCOUNT ]++ + $intTemperatureRating ) / $intTemperatureAverage[ AVGNIGHT ][ AVGCOUNT ];
 			}
+			// The same thing, again, for each event.
+			foreach( $hrEvent AS $evtKey => $evtVal ) {
+				if( $hourval[HRATOM] <= $evtVal[HRATOM] && $hourval[HRATOM]+ATOMICHOUR > $evtVal[HRATOM] ) {
+					$intTemperatureAverage[ $evtKey ][ AVGAVERAGE ] = ( $intTemperatureAverage[ $evtKey ][ AVGAVERAGE ] * $intTemperatureAverage[ $evtKey ][ AVGCOUNT ]++ + $intTemperatureRating ) / $intTemperatureAverage[ $evtKey ][ AVGCOUNT ];
+				// TODO: DELETE echo $hourval[HRATOM] . '  Average:' . $intTemperatureAverage[ $evtKey ][ AVGAVERAGE ] . '   Count:'. $intTemperatureAverage[ $evtKey ][ AVGCOUNT ] . chr(13) . chr(10);
+				}
+			}
 			break;
 		}
 
 		$map->flushImage();
 	  } 
 	}
+if( $blnVerbose ) {
 	echo '  <viewing>' . chr(13) . chr(10) . '   <clock>'. $hourval[HRTIME] .'</clock>' . chr(13) . chr(10);
 	switch( $intCloudCoverRating ) {
 	case -1:
@@ -1405,21 +1556,42 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 	}
 	echo '  </viewing>' . chr(13) . chr(10);
 	echo ' </hour>' . chr(13) . chr(10);
+}
   }	
 }
 echo ' <viewing>' . chr(13) . chr(10);
-echo '  <evening>' . ($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</evening>' . chr(13) . chr(10);
-echo '  <darkestnight>' . ($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</darkestnight>' . chr(13) . chr(10);
-echo '  <overnight>' . ($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</overnight>' . chr(13) . chr(10);
-echo '  <morning>' . ($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</morning>' . chr(13) . chr(10);
+echo '  <evening>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$location->get_sunset().'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$location->get_sunset()) .'</clockbegin>' . chr(13) . chr(10);
+echo '   <clockend atomic="'.$hrEven[HRATOM].'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$hrEven[HRATOM]) .'</clockend>' . chr(13) . chr(10);
+echo '   <viewing>' . ($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</viewing>' . chr(13) . chr(10);
+echo '  </evening>' . chr(13) . chr(10);
+echo '  <darkestnight>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$location->get_astrotwilightends().'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$location->get_astrotwilightends()) .'</clockbegin>' . chr(13) . chr(10);
+echo '   <clockend atomic="'.$location->get_astrotwilightbegins().'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$location->get_astrotwilightbegins()) .'</clockend>' . chr(13) . chr(10);
+echo '   <viewing>' . ($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</viewing>' . chr(13) . chr(10);
+echo '  </darkestnight>' . chr(13) . chr(10);
+echo '  <overnight>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$hrEven[HRATOM].'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$hrEven[HRATOM]) .'</clockbegin>' . chr(13) . chr(10);
+echo '   <clockend atomic="'.$hrMorn[HRATOM].'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$hrMorn[HRATOM]) .'</clockend>' . chr(13) . chr(10);
+echo '   <viewing>' . ($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</viewing>' . chr(13) . chr(10);
+echo '  </overnight>' . chr(13) . chr(10);
+echo '  <morning>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$hrMorn[HRATOM].'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$hrMorn[HRATOM]) .'</clockbegin>' . chr(13) . chr(10);
+echo '   <clockend atomic="'.$location->get_sunrise().'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$location->get_sunrise()) .'</clockend>' . chr(13) . chr(10);
+echo '   <viewing>' . ($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</viewing>' . chr(13) . chr(10);
+echo '  </morning>' . chr(13) . chr(10);
+foreach( $hrEvent AS $evtKey => $evtVal ) {
+	echo '  <event>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$evtVal[HRATOM].'">'. $evtVal[HRTIME] .'</clockbegin>' . chr(13) . chr(10);
+	echo '   <clockend atomic="'.$evtVal[HRATOM].'">'. $evtVal[HRTIME] .'</clockend>' . chr(13) . chr(10);
+	echo '   <viewing>' . ($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</viewing>' . chr(13) . chr(10);
+	echo '  </event>' . chr(13) . chr(10);
+}
 echo ' </viewing>' . chr(13) . chr(10);
 
+if( $blnVerbose ) {
 echo ' <credits>' . chr(13) . chr(10);
 echo 'Big thanks to Allan Rahill of the Canadian Meteorological Center (weather.gc.ca) for providing the maps.' . chr(13) . chr(10);
 echo ' </credits>' . chr(13) . chr(10);
 echo ' <credits>' . chr(13) . chr(10);
 echo 'Big thanks to Attila Danko of Clear Sky Chart (cleardarksky.com) for providing the locations (There are charts for 5518 locations.), and inspiration.' . chr(13) . chr(10);
 echo ' </credits>' . chr(13) . chr(10);
+}
 
 echo '</astroforecast>' . chr(13) . chr(10);
 ?>
