@@ -67,8 +67,10 @@ Events
 define('TIMEZONE', 'America/Toronto');
 define('TZSTD', 'standard');
 define('TZDST', 'daylight');
-define('TZLOCAL', 'localtimezone');
-define('TZOFFSET', 'tz');
+define('TZLOCAL', 'localtimezone');	// The time zone as used by the PHP system
+define('TZOFFSET', 'tz');	// The hours off of GMT standard time, 1 hour less in Daylight Saving Time
+define('TZISO', 'isotimezone');	// ISO standardized time zone, America/New_York 
+define('TZCOLLOQ', 'coltimezone');	// Time zone as called colloqually, Eastern Standard Time, Pacific Daylight Time (EST, PDT)
 define('SUNRISE', 'sunrise');
 define('SUNSET', 'sunset');
 define('SUNTRANSIT', 'transit');
@@ -85,6 +87,7 @@ define('XNORTHAMERICA', 'xna');
 define('YNORTHAMERICA', 'yna');
 define('LATITUDE', 'lat');
 define('LONGITUDE', 'lng');
+define('ALTITUDE', 'alt');
 
 define('CRCOLOUR', 'colour');
 define('CRTEXT', 'text');
@@ -102,11 +105,33 @@ define('AVGCOUNT', 'count');
 define('TIMEEVENING', '22h00');
 define('TIMEMORN', '04h00');
 
+define('DATADIR', 'data');
+define('DATELENGTH', 10);
+
+define('CSALTITUDE', 'alt');
+define('CSAZIMUTH', 'az');
+define('CSRIGHTASCENSION', 'ra');
+define('CSDECLINATION', 'dec');
+define('CSDISTANCE', 'dist');
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-include 'MoonPhase.php';
-include 'dxprog.php';
+//	include 'MoonPhase.php';	// calculates illumination and phase of the moon
+//	include 'dxprog.php';	// calculates moon rise and moon set
+include 'suncalc.php';	// has functions and classes for sun and moon RA/D calculations, rise/set times, illumination, phase.
+						/*
+						sunCoords($date)	// calculates dec, ra for the sun
+						moonCoords($date)	// calculates dec, ra, dist for the moon 
+						
+						$test = new SunCalc(new DateTime(), 48.85, 2.35);
+						
+						$test->getSunPosition()	// calculates altitude, azimuth of the sun for a given date and latitude/longitude
+						$test->getSunTimes() 	// calculates sun times for a given date and latitude/longitude
+						$test->getMoonPosition($date)	// calculates altitude, azimuth, distance of the moon for a finer date and the same latitude/longitude
+						$test->getMoonIllumination()	// calculates fraction, phase, angle of the moon for a given date and latitude/longitude
+						$test->getMoonTimes($inUTC=false)	// calculates moonrise, moonset, alwaysUp, alwaysDown of the moon for a given date and latitude/longitude.  Returns times in Zulu if inUTC is true.
+						*/ 
 
 class Location {
 /*
@@ -146,15 +171,19 @@ Location
 	private $dteMoonset;
 
 	private $arrObservatory = [ 
-		'Fred' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 367, YCLOUDCOVER => 450, XNORTHAMERICA => 500, YNORTHAMERICA => 315, LATITUDE => 43.650821, LONGITUDE => -79.570732, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
-		'Victoria' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 259, YCLOUDCOVER => 493, XNORTHAMERICA => 144, YNORTHAMERICA => 323, LATITUDE => 48.433, LONGITUDE => -123.35, TZOFFSET => -8, TZLOCAL => 'America/Vancouver' ],
-		'Winnipeg' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 597, YCLOUDCOVER => 471, XNORTHAMERICA => 334, YNORTHAMERICA => 310, LATITUDE => 49.68, LONGITUDE => -98.229, TZOFFSET => -6, TZLOCAL => 'America/Winnipeg' ],
-		'Churchill' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 598, YCLOUDCOVER => 278, XNORTHAMERICA => 334, YNORTHAMERICA => 200, LATITUDE => 58.767, LONGITUDE => -94.167, TZOFFSET => -6, TZLOCAL => 'America/Winnipeg' ],
-		'St. John\'s' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 582, YCLOUDCOVER => 129, XNORTHAMERICA => 627, YNORTHAMERICA => 126, LATITUDE => 47.55, LONGITUDE => -52.667, TZOFFSET => -3.5, TZLOCAL => 'America/St_Johns' ],
-		'Thunder Bay' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 200, YCLOUDCOVER => 431, XNORTHAMERICA => 403, YNORTHAMERICA => 303, LATITUDE => 48.2802777778, LONGITUDE => -89.5372222222, TZOFFSET => -6, TZLOCAL => 'America/Thunder_Bay' ],
-		'Fairbanks' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 150, YCLOUDCOVER => 91, XNORTHAMERICA => 81, YNORTHAMERICA => 76, LATITUDE => 64.838, LONGITUDE => -147.716, TZOFFSET => -9, TZLOCAL => 'America/Juneau' ],
-		'Colbeck' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 354, YCLOUDCOVER => 452, XNORTHAMERICA => 493, YNORTHAMERICA => 316, LATITUDE => 43.99, LONGITUDE => -80.3622222222, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ] ];
+		'Fred' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 367, YCLOUDCOVER => 450, XNORTHAMERICA => 500, YNORTHAMERICA => 315, LATITUDE => 43.650821, LONGITUDE => -79.570732, ALTITUDE => 110, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
+		'Victoria' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 258, YCLOUDCOVER => 492, XNORTHAMERICA => 143, YNORTHAMERICA => 322, LATITUDE => 48.433, LONGITUDE => -123.35, ALTITUDE => 18, TZOFFSET => -8, TZLOCAL => 'America/Vancouver' ],
+		'Winnipeg' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 596, YCLOUDCOVER => 470, XNORTHAMERICA => 333, YNORTHAMERICA => 309, LATITUDE => 49.68, LONGITUDE => -98.229, ALTITUDE => 232, TZOFFSET => -6, TZLOCAL => 'America/Winnipeg' ],
+		'Orono' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 375, YCLOUDCOVER => 438, XNORTHAMERICA => 505, YNORTHAMERICA => 307, LATITUDE => 43.9518, LONGITUDE => -78.61700, ALTITUDE => 164, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
+		'Torrance Barrens' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 354, YCLOUDCOVER => 428, XNORTHAMERICA => 493, YNORTHAMERICA => 301, LATITUDE => 44.9342, LONGITUDE => -79.50111, ALTITUDE => 247, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
+		'Churchill' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 597, YCLOUDCOVER => 277, XNORTHAMERICA => 333, YNORTHAMERICA => 199, LATITUDE => 58.767, LONGITUDE => -94.167, ALTITUDE => 6, TZOFFSET => -6, TZLOCAL => 'America/Winnipeg' ],
+		'St. John\'s' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 581, YCLOUDCOVER => 128, XNORTHAMERICA => 626, YNORTHAMERICA => 125, LATITUDE => 47.55, LONGITUDE => -52.667, ALTITUDE => 18, TZOFFSET => -3.5, TZLOCAL => 'America/St_Johns' ],
+		'Thunder Bay' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 199, YCLOUDCOVER => 430, XNORTHAMERICA => 402, YNORTHAMERICA => 302, LATITUDE => 48.2802777778, LONGITUDE => -89.5372222222, ALTITUDE => 187, TZOFFSET => -6, TZLOCAL => 'America/Thunder_Bay' ],
+		'Iqaluit' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 235, YCLOUDCOVER => 64, XNORTHAMERICA => 423, YNORTHAMERICA => 87, LATITUDE => 63.7330, LONGITUDE => -68.50000, ALTITUDE => 11, TZOFFSET => -5, TZLOCAL => 'America/Iqaluit' ],
+		'Fairbanks' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 150, YCLOUDCOVER => 91, XNORTHAMERICA => 81, YNORTHAMERICA => 96, LATITUDE => 64.838, LONGITUDE => -147.716, ALTITUDE => 136, TZOFFSET => -9, TZLOCAL => 'America/Juneau' ],
+		'Colbeck' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 353, YCLOUDCOVER => 451, XNORTHAMERICA => 492, YNORTHAMERICA => 315, LATITUDE => 43.99, LONGITUDE => -80.3622222222, ALTITUDE => 488, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ] ];
 
+// TODO: create child class based on just lat/lng and tz; requires that position is on both maps; alt is to be looked up; tz might be a look up, too; would allow for reversal of data flow where Aurora Watch, Heavens Above would look here for local forecast instead of this fusking for their data.
 	function __construct( $obs = null ) {
 		if( is_null( $obs ) ) {
 			$obs = $this->strObservatory;
@@ -218,7 +247,7 @@ Location
 		
 		an empty value in the element indicates that the sun never rises or twilight never begins
 		value of 1 in the element indicates that the sun never sets or twilight never ends
-		//ToDo: verify that empty is no start and 1 is no end
+		// TODO: verify that empty is no start and 1 is no end
 	*/
 	private function set_sunrise( $arrInfo = null ){ 
 		if( is_array( $arrInfo ) ) {
@@ -420,6 +449,61 @@ Location
 	
 }
 
+class GeoLocation extends Location {
+// TODO: create child class based on just lat/lng; requires that position is on both maps; alt is to be looked up; tz might be a look up, too; would allow for reversal of data flow where Aurora Watch, Heavens Above would look here for local forecast instead of this fusking for their data.
+// TODO: reverse the calculation that Attila Danko uses to calculate the lat/lng based on the map position. 
+/*
+Assertion: the map uses radial coordinates with the centre off of the map
+re=;  TODO: Define
+longitude_offset=;  TODO: Define
+x_offset=;  TODO: Define
+y_offset=;  TODO: Define
+Example: northwest cloud_quadrant
+re=1996.44363878;longitude_offset=21.0903036044;x_offset=-80.0592559677;y_offset=-278.039242032;
+Example: northeast cloud_quadrant
+re=2088.73662456;longitude_offset=20.8820184467;x_offset=429.191923645;y_offset=-282.399544304;
+Example: southwest cloud_quadrant
+re=2358.48225263;longitude_offset=20.9742281431;x_offset=351.030821817;y_offset=-783.700927506;
+Example: southeast cloud_quadrant
+re=2172.07869185;longitude_offset=20.8369967695;x_offset=-98.4221876369;y_offset=-696.29098283;
+Example: transparency, seeing
+re=             	1174.17107051;
+longitude_offset=	21.0522177703;
+x_offset=       	237.823352676;
+y_offset=       	-113.829432426;
+Example: wind 
+re=1174.16904765;longitude_offset=21.0603019683;x_offset=237.808527382;y_offset=-113.650010673;
+Example: humidity
+re=1174.20983653;longitude_offset=21.0563495659;x_offset=237.757334067;y_offset=-113.678638164;
+Example: temperature
+re=1174.15495006;longitude_offset=21.0456753417;x_offset=237.842271542;y_offset=-113.593452387;
+
+calculation to reverse:
+	latlon =  {'lat':0,'lon':0};
+        x=x-x_offset+0.5; y=y-y_offset+0.5;      
+        dlon=Math.atan(y/x)/degrees_to_radians;
+        if (x<0.5) dlon = dlon+ sgn(y)*180;                
+        dlon=dlon+longitude_offset;
+        if (dlon > 180) {dlon=dlon-360;}
+        else { if (dlon < -180) dlon=dlon+360; }; 
+        r2 = x*x + y*y;
+        re2 = re*re; 
+        dlat=(re2-r2)/(re2+r2);
+        dlat=Math.asin(dlat)/degrees_to_radians;
+        latlon.lat = dlat; latlon.lon=-dlon;
+        return latlon;
+
+method:
+	knowing that the map is radial, 
+	use the complement of the latitude to calculate the radius
+	use the complement of the longitude to calculate the angle
+	fit the offsets and test
+*/
+
+	function __construct( $geoPos = [ LATITUDE => 43.650821, LONGITUDE => -79.570732 ] ) {
+	}
+}
+
 class Night {
 /*
 
@@ -427,6 +511,7 @@ Night
 - hours	- the list of dusk to dawn hours for all possible locations 
 	(including Iqaluit, Inuvik, and Fairbanks, so noon to noon)
 - moon
+// TODO: subclass that contains only those hours that have events
 
 Time zones in service area
 Newfoundland	-2.5	-3.5
@@ -510,12 +595,13 @@ Weather Map
 	private $imgMap;
 	private $strObservatory;
 	protected $arrFiles;
+	protected $blnGarbageCollected = false;
 
 	function __construct( $obs = null, $date = null, $hour = null, $map = null ) {
 		$strPathURL = 'http://weather.gc.ca/data/prog/regional/';
 		$strSuffixLocal = '.png';
 		$strSuffixURL = '.png?1';
-		$arrFiles = [];
+		// TODO: DELETE $arrFiles = [];
 		if( is_null( $obs ) || is_null( $date ) || is_null( $hour ) || is_null( $map ) ) {
 			// not enough data to find weather map. make it blank.
 			$this->imgMap = imagecreate( 10, 10 );
@@ -591,17 +677,17 @@ Weather Map
 					return;
 				}
 				// TODO: Find weather maps from other agency sites
-				$this->strLocalAddress = 'data' . '/' . $date . $strMap . $hour . $strSuffixLocal;
+				$this->strLocalAddress = DATADIR . '/' . $date . $strMap . $hour . $strSuffixLocal;
 				$strLocalAddress = $date . $strMap . $hour . $strSuffixLocal;
 				$this->strURL = $strPathURL . $date . '/' . $date . $strMap . $hour . $strSuffixURL;
 
 				// We have the file name. Check if we have the file, or go get it.
-				if( sizeof($this->arrFiles) == 0 ) { $this->arrFiles = scandir( 'data' ); }
+				if( sizeof($this->arrFiles) == 0 ) { $this->arrFiles = scandir( DATADIR ); }
 				if( sizeof( array_intersect( $this->arrFiles, [ $strLocalAddress ] ) ) > 0 ) {
 					$imgMap = imagecreatefrompng($this->strLocalAddress);
 				}
 				else {
-					//TODO: get the file in the background
+					// TODO: get the file in the background
 					$imgMap = imagecreatefrompng($this->strURL);
 					if( $imgMap ) {
 						imagepng( $imgMap, $this->strLocalAddress );
@@ -612,6 +698,63 @@ Weather Map
 
 			}
 		}
+	}
+
+	// Delete files collected from previous nights
+	private function garbage_collection( $strDateToKeep, $strMapType ) {
+	
+		// TODO: Lookup and delete line. const DATELENGTH = 10;
+		$strMap = '';
+		
+	 	// check if there is any garbage to collect
+		if( sizeof($this->arrFiles) == 0 ) { return; }		
+		
+		if( is_numeric( $strDateToKeep ) && strlen( $strDateToKeep ) == DATELENGTH ) {
+			switch( $strMapType ) {
+			case 'northeast':
+				$strMap = '_054_R1_north@america@northeast_I_ASTRO_nt_';
+				break;
+			case 'northwest':
+				$strMap = '_054_R1_north@america@northwest_I_ASTRO_nt_';
+				break;
+			case 'southeast':
+				$strMap = '_054_R1_north@america@southeast_I_ASTRO_nt_';
+				break;
+			case 'southwest':
+				$strMap = '_054_R1_north@america@southwest_I_ASTRO_nt_';
+				break;
+			case 'transparency':
+				$strMap = '_054_R1_north@america@astro_I_ASTRO_transp_';
+				break;
+			case 'seeing':
+				$strMap = '_054_R1_north@america@astro_I_ASTRO_seeing_';
+				$hour = substr( '000' . (string) (floor(((integer) $hour +1)/3)*3), -3); 
+				break;
+			case 'wind':
+				$strMap = '_054_R1_north@america@astro_I_ASTRO_uv_';
+				break;
+			case 'humidity':
+				$strMap = '_054_R1_north@america@astro_I_ASTRO_hr_';
+				break;
+			case 'temperature':
+				$strMap = '_054_R1_north@america@astro_I_ASTRO_tt_';
+				break;
+			default: 
+				// Unknown map request. No map for you
+	// TODO: echo 'missing valid Weather Map map';
+				return;
+			}
+			
+			foreach( $this->arrFiles AS $strLocalAddress ) {
+				if( strpos( $strLocalAddress, $strMap ) > 1 && strpos( $strLocalAddress, $strDateToKeep ) === false ) {
+					// A candidate is found. Double check and delete.
+					if( is_numeric( substr( $strLocalAddress, 0, DATELENGTH ) ) ) {
+						unlink( DATADIR . '/' . $strLocalAddress );
+					}
+				}
+			}
+		}
+		return;	
 	}
 
 	public function image() {
@@ -679,7 +822,7 @@ Weather Analysis
 		case 'transparency':
 			$this->arrColourReference = 	
 				[
-				[ CRCOLOUR => '#000000', CRTEXT => 'border', CRRATING => -1 ],
+				[ CRCOLOUR => '#FF0000', CRTEXT => 'border', CRRATING => -1 ],
 				[ CRCOLOUR => '#F9F9F9', CRTEXT => 'Too cloudy to forecast', CRRATING => 0 ],
 				[ CRCOLOUR => '#C7C7C7', CRTEXT => 'Poor', CRRATING => 1 ],
 				[ CRCOLOUR => '#95D5D5', CRTEXT => 'Below Average', CRRATING => 2 ],
@@ -785,6 +928,76 @@ Weather Analysis
 	
 	public function get_rating(){ return( $this->intRating ); }
 	
+}
+
+// TODO: Create class for objects in the sky. Returns right ascension, declination, magnitude. Functions for altitude, azimuth, rise, set.
+class CelestialObject {
+	private $strObjectName;
+	private $fltRightAscension;
+	private $fltDeclination;
+	private $fltMagnitude;
+
+	function __construct( $strName, $fltRA, $fltDecl, $fltMag ) {
+		if( is_string( $strName ) ) $this->strObjectName = $strName;
+		if( is_numeric( $fltRA ) ) $this->fltRightAscension = $fltRA;
+		if( is_numeric( $fltDecl ) ) $this->fltDeclination = $fltDecl;
+		if( is_numeric( $fltMag ) ) $this->fltMagnitude = $fltMag;
+	}
+	
+	public function name() { return $this->strObjectName; }
+	public function ra() { return $this->fltRightAscension; }
+	public function dec() { return $this->fltDeclination; }
+	public function mag() { return $this->fltMagnitude; }
+}
+
+// TODO: Create class for objects that move in the sky
+class Planet extends CelestialObject {
+	function __construct( $strName, $dteTime, $arrEphemeris, $loc ) {
+	}
+}
+
+class Moon extends Planet {
+	private $strObjectName;
+	private $fltRightAscension;
+	private $fltDeclination;
+	private $fltMagnitude;
+	private $fltDistance;
+	private $dteRise;
+	private $dteSet;
+	private $arrIllumination;
+	
+	function __construct( $dteTime, $loc ) {
+		$this->strObjectName = 'Moon';
+		$dteOpposition = new DateTime();
+		$dteOpposition->setTimestamp( $loc->get_opposition() );
+		$dteTransit = new DateTime();
+		$dteTransit->setTimestamp( $loc->get_transit() );
+		$mooncalc = new SunCalc( $dteTime, $loc->geoposition()[ LATITUDE ], $loc->geoposition()[ LONGITUDE ] );
+		$this->dteRise = ( isset( $mooncalc->getMoonTimes()['alwaysUp'] ) ? $dteTransit :
+					 ( isset( $mooncalc->getMoonTimes()['alwaysDown'] ) ? $dteOpposition : 
+					  $mooncalc->getMoonTimes()['moonrise'] ) );
+		$this->dteSet = ( isset( $mooncalc->getMoonTimes()['alwaysUp'] ) ? $dteTransit :
+					 ( isset( $mooncalc->getMoonTimes()['alwaysDown'] ) ? $dteOpposition : 
+					  $mooncalc->getMoonTimes()['moonset'] ) );
+		$this->arrIllumination = $mooncalc->getMoonIllumination();
+		$arrNames = array( 'New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous', 'Full Moon', 'Waning Gibbous', 'Third Quarter', 'Waning Crescent', 'New Moon' );
+		// There are eight phases, evenly split. A "New Moon" occupies the 1/16th phases either side of phase = 0, and the rest follow from that.
+		$this->arrIllumination['name'] = $arrNames[ floor( ( $this->arrIllumination['fraction'] + 0.0625 ) * 8 ) ];
+
+		$this->fltDistance = moonCoords( toDays($dteTime) )->dist;
+		$this->fltRightAscension = ( moonCoords( toDays($dteTime) )->ra < 0 ? 2 * M_PI : 0.0 ) + moonCoords( toDays($dteTime) )->ra;
+		$this->fltDeclination = moonCoords( toDays($dteTime) )->dec;
+		$this->fltMagnitude = -13.0 ;
+	}
+	
+	public function dist() { return $this->fltDistance; }
+	public function rise() { return $this->dteRise; }
+	public function set() { return $this->dteSet; }
+	public function illumination() { return $this->arrIllumination; }
+	public function name() { return $this->strObjectName; }
+	public function ra() { return $this->fltRightAscension; }
+	public function dec() { return $this->fltDeclination; }
+	public function mag() { return $this->fltMagnitude; }
 }
 
 // TODO: Use XML object to build this XML code.
@@ -893,16 +1106,38 @@ echo '  </suntimes>' . chr(13) . chr(10);
 
 //	+ moonrise
 //	+ moonset
-$moonphase = new Solaris\MoonPhase( $location->get_opposition() );
-$moonriset = new MoonRiSet();
-$moonrise = $moonriset->calculateMoonTimes(date('m', $moonphase->phase()>.25?$location->get_sunset():$location->get_sunrise() ), date('d', $moonphase->phase()>.25?$location->get_sunset():$location->get_sunrise() ), date('Y', $moonphase->phase()>.25?$location->get_sunset():$location->get_sunrise() ), $location->geoposition()[ LATITUDE ], $location->geoposition()[ LONGITUDE ])->moonrise;
-$moonset = $moonriset->calculateMoonTimes(date('m', $moonphase->phase()<=.25?$location->get_sunset():$location->get_sunrise() ), date('d', $moonphase->phase()<=.25?$location->get_sunset():$location->get_sunrise() ), date('Y', $moonphase->phase()<=.25?$location->get_sunset():$location->get_sunrise() ), $location->geoposition()[ LATITUDE ], $location->geoposition()[ LONGITUDE ])->moonset;
+// TODO: DELETE LINE $moonphase = new Solaris\MoonPhase( $location->get_opposition() );
+// TODO: DELETE LINE $moonriset = new MoonRiSet();
+// TODO: DELETE LINE $dteOpposition = new DateTime();
+// TODO: DELETE LINE $dteOpposition->setTimestamp( $location->get_opposition() );
+// TODO: DELETE LINE $dteTransit = new DateTime();
+// TODO: DELETE LINE $dteTransit->setTimestamp( $location->get_transit() );
+// TODO: DELETE LINE $mooncalc = new SunCalc( $dteTransit, $location->geoposition()[ LATITUDE ], $location->geoposition()[ LONGITUDE ] );
+// TODO: DELETE LINE $moonrise = $moonriset->calculateMoonTimes(date('m', $moonphase->phase()>.25?$location->get_sunset():$location->get_sunrise() ), date('d', $moonphase->phase()>.25?$location->get_sunset():$location->get_sunrise() ), date('Y', $moonphase->phase()>.25?$location->get_sunset():$location->get_sunrise() ), $location->geoposition()[ LATITUDE ], $location->geoposition()[ LONGITUDE ])->moonrise;
+// TODO: DELETE LINE $moonrise = ( isset( $mooncalc->getMoonTimes()['alwaysUp'] ) ? $dteTransit :
+// TODO: DELETE LINE 			 ( isset( $mooncalc->getMoonTimes()['alwaysDown'] ) ? $dteOpposition : 
+// TODO: DELETE LINE 			  $mooncalc->getMoonTimes()['moonrise'] ) );
+// TODO: DELETE LINE $moonset = $moonriset->calculateMoonTimes(date('m', $moonphase->phase()<=.25?$location->get_sunset():$location->get_sunrise() ), date('d', $moonphase->phase()<=.25?$location->get_sunset():$location->get_sunrise() ), date('Y', $moonphase->phase()<=.25?$location->get_sunset():$location->get_sunrise() ), $location->geoposition()[ LATITUDE ], $location->geoposition()[ LONGITUDE ])->moonset;
+// TODO: DELETE LINE $moonset = ( isset( $mooncalc->getMoonTimes()['alwaysUp'] ) ? $dteTransit :
+// TODO: DELETE LINE 			 ( isset( $mooncalc->getMoonTimes()['alwaysDown'] ) ? $dteOpposition : 
+// TODO: DELETE LINE 			  $mooncalc->getMoonTimes()['moonset'] ) );
+$dteTransit = new DateTime();
+$dteTransit->setTimestamp( $location->get_transit() );
+$objMoon = new Moon( $dteTransit, $location );
+$objMoonRise = new Moon( $objMoon->rise(), $location );
+$objMoonSet = new Moon( $objMoon->set(), $location );
 echo '  <moontimes>' . chr(13) . chr(10);
-echo '   <moonrise atomic="'.$moonrise.'">'. date('H\hi',$moonrise) .'</moonrise>' . chr(13) . chr(10);
-echo '   <phase>'. $moonphase->phase() .'</phase>' . chr(13) . chr(10);
-echo '   <illum>'. $moonphase->illumination() .'</illum>' . chr(13) . chr(10);
-echo '   <phasename>'. $moonphase->phase_name() .'</phasename>' . chr(13) . chr(10);
-echo '   <moonset atomic="'.$moonset.'">'. date('H\hi',$moonset) .'</moonset>' . chr(13) . chr(10);
+echo '   <moonrise atomic="'.$objMoon->rise()->getTimestamp().'">'. date('Ymd H\hi',$objMoon->rise()->getTimestamp()) .'</moonrise>' . chr(13) . chr(10);
+echo '   <ra radian="'. $objMoonRise->ra() .'">'. ( $objMoonRise->ra() * 12.0 / M_PI) .'</ra>' . chr(13) . chr(10);
+echo '   <dec radian="'. $objMoonRise->dec() .'">'. ( $objMoonRise->dec() * 180.0 / M_PI) .'</dec>' . chr(13) . chr(10);
+echo '   <phase>'. $objMoon->illumination()['phase'] .'</phase>' . chr(13) . chr(10);
+echo '   <illum>'. $objMoon->illumination()['fraction'] .'</illum>' . chr(13) . chr(10);
+echo '   <phasename>'. $objMoon->illumination()['name'] .'</phasename>' . chr(13) . chr(10);
+echo '   <ra radian="'. $objMoon->ra() .'">'. ( $objMoon->ra() * 12.0 / M_PI) .'</ra>' . chr(13) . chr(10);
+echo '   <dec radian="'. $objMoon->dec() .'">'. ( $objMoon->dec() * 180.0 / M_PI) .'</dec>' . chr(13) . chr(10);
+echo '   <moonset atomic="'.$objMoon->set()->getTimestamp().'">'. date('Ymd H\hi',$objMoon->set()->getTimestamp()) .'</moonset>' . chr(13) . chr(10);
+echo '   <ra radian="'. $objMoonSet->ra() .'">'. ( $objMoonSet->ra() * 12.0 / M_PI) .'</ra>' . chr(13) . chr(10);
+echo '   <dec radian="'. $objMoonSet->dec() .'">'. ( $objMoonSet->dec() * 180.0 / M_PI) .'</dec>' . chr(13) . chr(10);
 echo '  </moontimes>' . chr(13) . chr(10);
 
 
@@ -919,13 +1154,13 @@ foreach( $arrHours AS $key => $val ) {
 echo ' </night>' . chr(13) . chr(10);
 
 $maps = [ 'northeast', 'northwest', 'southeast', 'southwest', 'transparency', 'seeing', 'wind', 'humidity', 'temperature' ];
-//TODO: dusk to dawn
+// TODO: dusk to dawn
 $strDusk = substr( '000' . (string)($location->sunset_hour()  +5  -(integer)$night->get_twelve()), -3);
 $strDawn = substr( '000' . (string)($location->sunrise_hour() +29 -(integer)$night->get_twelve()), -3);
-//TODO: $strDusk = substr( '000' . (string)($location->sunset_hour() - $location->timeoffset() +00 -(integer)$night->get_twelve()), -3);
-//TODO: $strDawn = substr( '000' . (string)($location->sunrise_hour() - $location->timeoffset() +24 -(integer)$night->get_twelve()), -3);
+// TODO: $strDusk = substr( '000' . (string)($location->sunset_hour() - $location->timeoffset() +00 -(integer)$night->get_twelve()), -3);
+// TODO: $strDawn = substr( '000' . (string)($location->sunrise_hour() - $location->timeoffset() +24 -(integer)$night->get_twelve()), -3);
 
-//TODO:  Can I see anything?
+// TODO:  Can I see anything?
 $intCloudCoverAverage = [ AVGEVENING => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGNIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGASTROTWILIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGMORN => [ AVGAVERAGE => -1, AVGCOUNT => 0] ];
 $intTransparencyAverage = [ AVGEVENING => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGNIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGASTROTWILIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGMORN => [ AVGAVERAGE => -1, AVGCOUNT => 0] ];
 $intSeeingAverage = [ AVGEVENING => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGNIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGASTROTWILIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGMORN => [ AVGAVERAGE => -1, AVGCOUNT => 0] ];
@@ -933,7 +1168,7 @@ $intWindAverage = [ AVGEVENING => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGNIGHT =
 $intHumidityAverage = [ AVGEVENING => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGNIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGASTROTWILIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGMORN => [ AVGAVERAGE => -1, AVGCOUNT => 0] ];
 $intTemperatureAverage = [ AVGEVENING => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGNIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGASTROTWILIGHT => [ AVGAVERAGE => -1, AVGCOUNT => 0], AVGMORN => [ AVGAVERAGE => -1, AVGCOUNT => 0] ];
 
-//TODO: daytime events
+// TODO: daytime events
 foreach( $arrHours AS $hourkey => $hourval ) {
   if( $hourkey >= $strDusk && $hourkey <= $strDawn ) {
 	echo ' <hour time="'. $hourval[HRTIME] .'">' . chr(13) . chr(10);
@@ -976,7 +1211,7 @@ foreach( $arrHours AS $hourkey => $hourval ) {
 		echo '   <rating>' . $weather->get_rating() . '</rating>' . chr(13) . chr(10);
 		echo '  </weather>' . chr(13) . chr(10);
 
-//TODO:  Can I see anything?
+// TODO:  Can I see anything?
 		switch( $mapval ) {
 		case 'northeast':
 		case 'northwest':
