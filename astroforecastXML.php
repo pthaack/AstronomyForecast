@@ -174,6 +174,7 @@ Location
 
 	private $arrObservatory = [ 
 		'Fred' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 367, YCLOUDCOVER => 450, XNORTHAMERICA => 500, YNORTHAMERICA => 315, LATITUDE => 43.650821, LONGITUDE => -79.570732, ALTITUDE => 110, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
+		'Mississauga' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 367, YCLOUDCOVER => 452, XNORTHAMERICA => 500, YNORTHAMERICA => 315, LATITUDE => 43.5802, LONGITUDE => -79.61658, ALTITUDE => 110, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
 		'Victoria' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 258, YCLOUDCOVER => 492, XNORTHAMERICA => 143, YNORTHAMERICA => 322, LATITUDE => 48.433, LONGITUDE => -123.35, ALTITUDE => 18, TZOFFSET => -8, TZLOCAL => 'America/Vancouver' ],
 		'Winnipeg' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 596, YCLOUDCOVER => 470, XNORTHAMERICA => 333, YNORTHAMERICA => 309, LATITUDE => 49.68, LONGITUDE => -98.229, ALTITUDE => 232, TZOFFSET => -6, TZLOCAL => 'America/Winnipeg' ],
 		'Orono' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 375, YCLOUDCOVER => 438, XNORTHAMERICA => 505, YNORTHAMERICA => 307, LATITUDE => 43.9518, LONGITUDE => -78.61700, ALTITUDE => 164, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
@@ -193,6 +194,7 @@ Location
 		else {
 			switch( $obs ){
 			case 'Fred':
+			case 'Mississauga':
 			case 'Victoria':
 			case 'Winnipeg':
 			case 'Churchill':
@@ -536,9 +538,13 @@ Indiana changed in 2006 to use DST.
 			// If Arctic location, 12h to 12h (no rise) or 12h to 36h (no set) local time
 	private $strTwelve;	// for determining the correct map, =00 for morning, =12 for afternoon
 	
-	function __construct( $tz = -4 ) {
+	function __construct( $tz = TIMEZONE ) {
 		date_default_timezone_set(TIMEZONE); // Has to be done in Ottawa time zone, because the server updates at noon and midnight Ottawa time
 		$this->strTwelve = (date('H')>=12?'12':'00');
+		$tzHrTime = new DateTimeZone( $tz );
+		$dteHrTime = new DateTime();
+		$dteHrTime->setTime( 13,0,0 ); 
+		$dteHrTime->setTimezone( $tzHrTime );
 		// TODO: DELETE echo 'TZ:'. $tz . ' Twv: ' . $this->strTwelve . chr(13).chr(10);
 		for( $intI = 12 -(integer) $this->strTwelve +5; 
 				$intI <= 12 -(integer) $this->strTwelve +9 +24;
@@ -546,18 +552,23 @@ Indiana changed in 2006 to use DST.
 			$strHour = substr('000' . (string) $intI, -3);
 
 			// HRTIME is the Human Readable time in HHhMM
-			$this->arrHours[ $strHour ][HRTIME] = substr('0' . (string)( ($intI + floor($tz))%24>12 ? ($intI + floor($tz))%24 - (integer)$this->strTwelve : ($intI + floor($tz))%24 + (integer)$this->strTwelve ), -2) . ($tz-floor($tz)>0.49?'h30':'h00');
-			$strDateTime = (string)((integer)date('Ymd')+floor(($intI + $tz)/24)).substr($this->arrHours[ $strHour ][HRTIME],0,2).substr($this->arrHours[ $strHour ][HRTIME],3,2).'00';
-			$strDateTime = (string)((integer)date('Ymd')+floor(($intI + $tz)/24)).substr($this->arrHours[ $strHour ][HRTIME],0,2).substr($this->arrHours[ $strHour ][HRTIME],3,2).'00';
+			$this->arrHours[ $strHour ][HRTIME] = $dteHrTime->format('H\hi');
+			// $this->arrHours[ $strHour ][HRTIME] = substr('0' . (string)( ($intI + floor($tz))%24>12 ? ($intI + floor($tz))%24 - (integer)$this->strTwelve : ($intI + floor($tz))%24 + (integer)$this->strTwelve ), -2) . ($tz-floor($tz)>0.49?'h30':'h00');
+			// $strDateTime = (string)((integer)date('Ymd')+floor(($intI + $tz)/24)).substr($this->arrHours[ $strHour ][HRTIME],0,2).substr($this->arrHours[ $strHour ][HRTIME],3,2).'00';
+			// $strDateTime = (string)((integer)date('Ymd')+floor(($intI + $tz)/24)).substr($this->arrHours[ $strHour ][HRTIME],0,2).substr($this->arrHours[ $strHour ][HRTIME],3,2).'00';
 			// Timestamp has to be interpreted in the local time zone, not Ottawa time.
-			$intDateTime = mktime((integer)substr($strDateTime,8,2),
+			/* $intDateTime = mktime((integer)substr($strDateTime,8,2),
 									(integer)substr($strDateTime,10,2),
 									(integer)substr($strDateTime,12,2),
 									(integer)substr($strDateTime,4,2),
 									(integer)substr($strDateTime,6,2),
 									(integer)substr($strDateTime,0,4));
+									*/
 			// HRATOM is the HouR in the timestamp format
-			$this->arrHours[ $strHour ][HRATOM] = $intDateTime - $tz*ATOMICHOUR -4*ATOMICHOUR ;
+			$this->arrHours[ $strHour ][HRATOM] = $dteHrTime->getTimestamp();
+			// $this->arrHours[ $strHour ][HRATOM] = $intDateTime - $tz*ATOMICHOUR -4*ATOMICHOUR + (  ? 0 : 24*ATOMICHOUR );
+			
+			$dteHrTime->add( DateInterval::createFromDateString('1 hour') );
 		}
 		$this->strDate = date('Ymd') . $this->strTwelve;
 	}
@@ -569,8 +580,8 @@ Indiana changed in 2006 to use DST.
 		$arrHrKeys = array_keys($this->arrHours);
 		$arrHrVals = array_values($this->arrHours);
 		if( is_numeric( $intTimeStamp ) ) {
-			if( $intTimeStamp > time() && $intTimeStamp < $arrHrVals[0][HRATOM] || $intTimeStamp > $arrHrVals[ sizeof($arrHrVals)-1 ][HRATOM] + ATOMICHOUR ) {
-				// TODO: DELETE echo 'adding '. $intTimeStamp . ' first: '. $arrHrVals[0][HRATOM] . ' last: '. $arrHrVals[ sizeof($arrHrVals)-1 ][HRATOM] .chr(13) . chr(10);
+			if( $intTimeStamp > time() ) {
+				// TODO: DELETE 	echo 'adding '. $intTimeStamp . ' first: '. $arrHrVals[0][HRATOM] . ' last: '. $arrHrVals[ sizeof($arrHrVals)-1 ][HRATOM] .chr(13) . chr(10);
 				$dte1stHour = new DateTime();
 				$dte1stHour->setTimestamp( $arrHrVals[0][HRATOM] );
 				$dteNewHour = new DateTime();
@@ -585,8 +596,8 @@ Indiana changed in 2006 to use DST.
 				$dteHrTime->setTime( (integer)substr( $arrHrVals[ 0 ][HRTIME], 0, 2 ), (integer)substr( $arrHrVals[ 0 ][HRTIME], 3, 2 ) )->add(DateInterval::createFromDateString( (string)( $intHour -(integer)$arrHrKeys[0] ) .' hours') );
 				$strHrTime = $dteHrTime->format('Ymd H\hi');
 				
-				// TODO: DELETE echo 'adding '. date('Ymd H\hi',$intTimeStamp) . ' str: '. $intTimeStamp . ' Hour: '. $strHrTime .chr(13) . chr(10);
-				if( $intHour <= 48 ) {
+				// TODO: DELETE echo 'adding '. $dteHrTime->format( 'Ymd H\hi' ) . ' str: '. $intTimeStamp . ' Hour: '. $intHour .chr(13) . chr(10);
+				if( $intHour <= 48 && array_search( $strHour, $arrHrKeys ) === false ) {
 					$this->arrHours[ $strHour ] = [ HRTIME => $dteHrTime->format('H\hi'), HRATOM => $intHrTimestamp ];
 				}				
 			}
@@ -650,6 +661,7 @@ Weather Map
 		else {
 			switch( $obs ) {
 			case 'Fred':
+			case 'Mississauga':
 			case 'Victoria':
 			case 'Winnipeg':
 			case 'Churchill':
@@ -1185,7 +1197,7 @@ if( isset( $_GET['hr'] ) ) {
 						$dteEvent->setTime( $intHour, $intMinute, $intSecond );
 						if( $dteEvent->getTimestamp() < time() ) {
 							// if the event is in the past, add a day.
-							$dteEvent->add(new DateInterval('P1D'));
+							$dteEvent->add( DateInterval::createFromDateString( (string)( $intHour -(integer)$arrHrKeys[0] ) .'1 hours') );
 						}
 						$hrEvent[] = [ HRATOM => $dteEvent->getTimestamp(), HRTIME => $dteEvent->format('H\hi') ];
 					}
@@ -1197,6 +1209,10 @@ if( isset( $_GET['hr'] ) ) {
 		}
 	}
 }
+
+// convert timestamps to DateTime object to display in observatory timezone, for to be sure
+$dteDisplayTime = new DateTime();
+$dteDisplayTime->setTimezone( $tzEvent );
 
 if( $blnVerbose ) {
 echo ' <observatory>' . chr(13) . chr(10);
@@ -1225,10 +1241,6 @@ echo '</y-map2-coordinate>' . chr(13) . chr(10);
 echo '  <timezone>'. $location->timeoffset() .'</timezone>' . chr(13) . chr(10);
 echo '  <sunrise>'. $location->sunrise_hour() .'</sunrise>' . chr(13) . chr(10);	
 echo '  <sunset>'. $location->sunset_hour() .'</sunset>' . chr(13) . chr(10);
-
-// convert timestamps to DateTime object to display in observatory timezone, for to be sure
-$dteDisplayTime = new DateTime();
-$dteDisplayTime->setTimezone( $tzEvent );
 
 echo '  <suntimes>' . chr(13) . chr(10);
 echo '   <transit atomic="'.$location->get_transit().'">'. $dteDisplayTime->setTimestamp( $location->get_transit() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</transit>' . chr(13) . chr(10);
@@ -1285,7 +1297,7 @@ echo '  </moontimes>' . chr(13) . chr(10);
 echo ' </observatory>' . chr(13) . chr(10);
 }
 
-$night = new Night($location->timeoffset());
+$night = new Night($location->timezone());
 $strFolder = $night->get_date();
 $arrHours = $night->get_hours();
 foreach( $hrEvent AS $evtKey => $evtVal ) { 
@@ -1424,7 +1436,7 @@ if( $blnVerbose ) {
 			foreach( $hrEvent AS $evtKey => $evtVal ) {
 				if( $hourval[HRATOM] <= $evtVal[HRATOM] && $hourval[HRATOM]+ATOMICHOUR > $evtVal[HRATOM] ) {
 					$intCloudCoverAverage[ $evtKey ][ AVGAVERAGE ] = ( $intCloudCoverAverage[ $evtKey ][ AVGAVERAGE ] * $intCloudCoverAverage[ $evtKey ][ AVGCOUNT ]++ + $intCloudCoverRating ) / $intCloudCoverAverage[ $evtKey ][ AVGCOUNT ];
-				// TODO: DELETE echo $hourval[HRATOM] . '  Average:' . $intCloudCoverAverage[ $evtKey ][ AVGAVERAGE ] . '   Count:'. $intCloudCoverAverage[ $evtKey ][ AVGCOUNT ] . chr(13) . chr(10);
+					// TODO: DELETE echo $hourval[HRATOM] . '  Average:' . $intCloudCoverAverage[ $evtKey ][ AVGAVERAGE ] . '   Count:'. $intCloudCoverAverage[ $evtKey ][ AVGCOUNT ] . chr(13) . chr(10);
 				}
 			}
 			break;
