@@ -64,11 +64,11 @@ Events
 ***************************************************** */
 
 //Set timezone for Ottawa, source of government maps
-define('TIMEZONE', 'America/Toronto');
+define('TIMEZONE', 'America/Toronto');	// The time zone used by the map generating system
 define('TZUTC', 'UTC');	// Zulu time, GMT in Standard Time 
 define('TZSTD', 'standard');
 define('TZDST', 'daylight');
-define('TZLOCAL', 'localtimezone');	// The time zone as used by the PHP system
+define('TZLOCAL', 'localtimezone');	// The time zone of the observatory
 define('TZOFFSET', 'tz');	// The hours off of GMT standard time, 1 hour less in Daylight Saving Time
 define('TZISO', 'isotimezone');	// ISO standardized time zone, America/New_York 
 define('TZCOLLOQ', 'coltimezone');	// Time zone as called colloqually, Eastern Standard Time, Pacific Daylight Time (EST, PDT)
@@ -154,7 +154,7 @@ Location
 	private $fltGeoposition = [ LATITUDE => 43.650821, LONGITUDE => -79.570732 ];
 	private $intMap1Coordinates = [ MAPPARAM => 'northeast', XCLOUDCOVER => 368, YCLOUDCOVER => 451 ];
 	private $intMap2Coordinates = [ XNORTHAMERICA => 501, YNORTHAMERICA => 316 ];
-	private $intTimeZoneOffset = -4;
+	private $fltTimeZoneOffset = -4.0;
 	private $fltTimeZoneAdjustment = 0.0; 
 	private $intSunrise;
 	private $intSunset;
@@ -198,6 +198,9 @@ Location
 			case 'Churchill':
 			case 'St. John\'s':
 			case 'Thunder Bay':
+			case 'Orono':
+			case 'Torrance Barrens':
+			case 'Iqaluit':
 			case 'Fairbanks':
 			case 'Colbeck':
 				// Known observatory
@@ -220,6 +223,7 @@ Location
 		$dteSource = new DateTime( 'now' );
 		$tzLocal = new DateTimeZone( $this->arrObservatory[$this->strObservatory][ TZLOCAL ] );
 		$dteLocal = new DateTime( 'now' );
+		$dteLocal->setTimezone( $tzLocal );
 		$this->fltTimeZoneAdjustment = $tzLocal->getOffset( $dteLocal ) - $tzSource->getOffset( $dteSource ); // TODO: echo 'tz:'. $this->fltTimeZoneAdjustment/3600 .chr(13).chr(10);
 
 		$arrSunInfo = date_sun_info( time(), $this->arrObservatory[ $obs ][ LATITUDE ], $this->arrObservatory[ $obs ][ LONGITUDE ]); 
@@ -235,7 +239,7 @@ Location
 		$this->dteATBegin = $this->set_astrotwilightbegins( $arrTomorrow );
 		$this->dteATEnd = $this->set_astrotwilightends( $arrSunInfo );
 
-		$this->intTimeZoneOffset = $this->arrObservatory[ $obs ][ TZOFFSET ];
+		$this->fltTimeZoneOffset = (float)$this->arrObservatory[ $obs ][ TZOFFSET ];
 					
 	}
 
@@ -255,10 +259,10 @@ Location
 		if( is_array( $arrInfo ) ) {
 			if( is_numeric( $arrInfo[SUNRISE] ) ) {
 				if( $arrInfo[SUNRISE] == 1 ) {
-					return( $arrInfo[SUNTRANSIT] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[SUNTRANSIT] );
 				}
 				else {
-					return( $arrInfo[SUNRISE] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[SUNRISE] );
 				}
 			}
 			else {
@@ -271,10 +275,10 @@ Location
 		if( is_array( $arrInfo ) ) {
 			if( is_numeric( $arrInfo[SUNSET] ) ) {
 				if( $arrInfo[SUNSET] == 1 ) {
-					return( $arrInfo[SUNTRANSIT] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[SUNTRANSIT] );
 				}
 				else {
-					return( $arrInfo[SUNSET] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[SUNSET] );
 				}
 			}
 			else {
@@ -285,13 +289,13 @@ Location
 	}
 	private function set_transit( $arrInfo = null ){ 
 		if( is_array( $arrInfo ) ) {
-			return( $arrInfo[SUNTRANSIT] + $this->fltTimeZoneAdjustment);
+			return( $arrInfo[SUNTRANSIT] );
 		}
 		return( $this->dteTransit ); 
 	}
 	private function set_opposition( $arrInfo = null, $arrTomorrow = null ){ 
 		if( is_array( $arrInfo ) && is_array( $arrTomorrow ) ) {
-			return( floor( ($arrTomorrow[SUNTRANSIT] + $arrInfo[SUNTRANSIT]) / 2 ) + $this->fltTimeZoneAdjustment );
+			return( floor( ($arrTomorrow[SUNTRANSIT] + $arrInfo[SUNTRANSIT]) / 2 ) );
 		}
 		return( $this->dteOpposition ); 
 	}
@@ -299,10 +303,10 @@ Location
 		if( is_array( $arrInfo ) ) {
 			if( is_numeric( $arrInfo[CIVILTWILIGHTBEG] ) ) {
 				if( $arrInfo[CIVILTWILIGHTBEG] == 1 ) {
-					return( $arrInfo[SUNTRANSIT] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[SUNTRANSIT] );
 				}
 				else {
-					return( $arrInfo[CIVILTWILIGHTBEG] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[CIVILTWILIGHTBEG] );
 				}
 			}
 			else {
@@ -315,10 +319,10 @@ Location
 		if( is_array( $arrInfo ) ) {
 			if( is_numeric( $arrInfo[CIVILTWILIGHTEND] ) ) {
 				if( $arrInfo[CIVILTWILIGHTEND] == 1 ) {
-					return( $arrInfo[SUNTRANSIT] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[SUNTRANSIT] );
 				}
 				else {
-					return( $arrInfo[CIVILTWILIGHTEND] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[CIVILTWILIGHTEND] );
 				}
 			}
 			else {
@@ -331,10 +335,10 @@ Location
 		if( is_array( $arrInfo ) ) {
 			if( is_numeric( $arrInfo[NAUTTWILIGHTBEG] ) ) {
 				if( $arrInfo[NAUTTWILIGHTBEG] == 1 ) {
-					return( $arrInfo[SUNTRANSIT] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[SUNTRANSIT] );
 				}
 				else {
-					return( $arrInfo[NAUTTWILIGHTBEG] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[NAUTTWILIGHTBEG] );
 				}
 			}
 			else {
@@ -347,10 +351,10 @@ Location
 		if( is_array( $arrInfo ) ) {
 			if( is_numeric( $arrInfo[NAUTTWILIGHTEND] ) ) {
 				if( $arrInfo[NAUTTWILIGHTEND] == 1 ) {
-					return( $arrInfo[SUNTRANSIT] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[SUNTRANSIT] );
 				}
 				else {
-					return( $arrInfo[NAUTTWILIGHTEND] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[NAUTTWILIGHTEND] );
 				}
 			}
 			else {
@@ -363,10 +367,10 @@ Location
 		if( is_array( $arrInfo ) ) {
 			if( is_numeric( $arrInfo[ASTROTWILIGHTBEG] ) ) {
 				if( $arrInfo[ASTROTWILIGHTBEG] == 1 ) {
-					return( $arrInfo[SUNTRANSIT] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[SUNTRANSIT] );
 				}
 				else {
-					return( $arrInfo[ASTROTWILIGHTBEG] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[ASTROTWILIGHTBEG] );
 				}
 			}
 			else {
@@ -379,10 +383,10 @@ Location
 		if( is_array( $arrInfo ) ) {
 			if( is_numeric( $arrInfo[ASTROTWILIGHTEND] ) ) {
 				if( $arrInfo[ASTROTWILIGHTEND] == 1 ) {
-					return( $arrInfo[SUNTRANSIT] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[SUNTRANSIT] );
 				}
 				else {
-					return( $arrInfo[ASTROTWILIGHTEND] + $this->fltTimeZoneAdjustment );
+					return( $arrInfo[ASTROTWILIGHTEND] );
 				}
 			}
 			else {
@@ -441,14 +445,10 @@ Location
 		return $intSunset;
 	}
 
-	public function timeoffset() {
-		return( $this->intTimeZoneOffset );
-	}
+	public function timeoffset() { return( $this->fltTimeZoneOffset ); }
 	public function timezone() { return( $this->arrObservatory[$this->strObservatory][ TZLOCAL ] ); }
 
-	public function map() {
-		return( $this->arrObservatory[ $this->strObservatory ][ MAPPARAM ] );
-	}
+	public function map() { return( $this->arrObservatory[ $this->strObservatory ][ MAPPARAM ] ); }
 	
 }
 
@@ -537,7 +537,7 @@ Indiana changed in 2006 to use DST.
 	private $strTwelve;	// for determining the correct map, =00 for morning, =12 for afternoon
 	
 	function __construct( $tz = -4 ) {
-		date_default_timezone_set(TIMEZONE); // Has to be done in Ottawa time zone
+		date_default_timezone_set(TIMEZONE); // Has to be done in Ottawa time zone, because the server updates at noon and midnight Ottawa time
 		$this->strTwelve = (date('H')>=12?'12':'00');
 		// TODO: DELETE echo 'TZ:'. $tz . ' Twv: ' . $this->strTwelve . chr(13).chr(10);
 		for( $intI = 12 -(integer) $this->strTwelve +5; 
@@ -655,6 +655,9 @@ Weather Map
 			case 'Churchill':
 			case 'St. John\'s':
 			case 'Thunder Bay':
+			case 'Orono':
+			case 'Torrance Barrens':
+			case 'Iqaluit':
 			case 'Fairbanks':
 			case 'Colbeck':
 				// Known observatory
@@ -1017,7 +1020,7 @@ class Moon extends Planet {
 		$this->arrIllumination = $mooncalc->getMoonIllumination();
 		$arrNames = array( 'New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous', 'Full Moon', 'Waning Gibbous', 'Third Quarter', 'Waning Crescent', 'New Moon' );
 		// There are eight phases, evenly split. A "New Moon" occupies the 1/16th phases either side of phase = 0, and the rest follow from that.
-		$this->arrIllumination['name'] = $arrNames[ floor( ( $this->arrIllumination['fraction'] + 0.0625 ) * 8 ) ];
+		$this->arrIllumination['name'] = $arrNames[ floor( ( $this->arrIllumination['phase'] + 0.0625 ) * 8 ) ];
 
 		$this->fltDistance = moonCoords( toDays($dteTime) )->dist;
 		$this->fltRightAscension = ( moonCoords( toDays($dteTime) )->ra < 0 ? 2 * M_PI : 0.0 ) + moonCoords( toDays($dteTime) )->ra;
@@ -1108,11 +1111,11 @@ $location = new Location();
 $blnVerbose = false;
 if( isset( $_GET['verbose'] ) ) $blnVerbose = true;
 $hrEvent = [];
+$tzEvent = new DateTimeZone( $location->timezone() ); 
 if( isset( $_GET['ts'] ) ) {
 	// Qualify that the ts is a timestamp
 	if( is_numeric( $_GET['ts'] ) ) {
 		if( (integer) $_GET['ts'] > time() ) {
-			$tzEvent = new DateTimeZone( $location->timezone() ); 
 			$dteEvent = new DateTime; 
 			$dteEvent->setTimestamp( $_GET['ts'] ); 
 			$dteEvent->setTimezone( $tzEvent );
@@ -1123,11 +1126,72 @@ if( isset( $_GET['ts'] ) ) {
 		foreach( $_GET['ts'] AS $tsVal ) {
 			if( is_numeric( $tsVal ) ) {
 				if( (integer)$tsVal > time() ) {
-					$tzEvent = new DateTimeZone( $location->timezone() ); 
 					$dteEvent = new DateTime; 
 					$dteEvent->setTimestamp( $tsVal ); 
 					$dteEvent->setTimezone( $tzEvent );
 					$hrEvent[] = [ HRATOM => $dteEvent->getTimestamp(), HRTIME => $dteEvent->format('H\hi') ];
+				}
+			}
+		}
+	}
+}
+if( isset( $_GET['hr'] ) ) {
+	// Qualify that the hr is a valid 24h time string
+	// Allow ##h, ##h##, ##h##m, ##h##m##, ##h##m##s
+	$dteEvent = new DateTime; 
+	$dteEvent->setTimezone( $tzEvent );
+	if( is_string( $_GET['hr'] ) ) {
+		$intHour = 0;
+		$intMinute = 0;
+		$intSecond = 0;
+		switch( strlen( $_GET['hr'] ) ) {
+		case 9:
+		case 8:
+			$intSecond = (integer) substr( $_GET['hr'],6,2 );
+		case 6:
+		case 5:
+			$intMinute = (integer) substr( $_GET['hr'],3,2 );
+		case 3:
+			$intHour = (integer) substr( $_GET['hr'],0,2 );
+			if( $intHour >= 0 && $intHour <= 23 && $intMinute >= 0 && $intMinute <= 59 && $intSecond >= 0 && $intSecond <= 59 ) {
+				$dteEvent->setTime( $intHour, $intMinute, $intSecond );
+				if( $dteEvent->getTimestamp() < time() ) {
+					// if the event is in the past, add a day.
+					$dteEvent->add(new DateInterval('P1D'));
+				}
+				$hrEvent[] = [ HRATOM => $dteEvent->getTimestamp(), HRTIME => $dteEvent->format('H\hi') ];
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	elseif( is_array( $_GET['hr'] ) ) {
+		foreach( $_GET['hr'] AS $hrVal ) {
+			if( is_string( $hrVal ) ) {
+				$intHour = 0;
+				$intMinute = 0;
+				$intSecond = 0;
+				switch( strlen( $hrVal ) ) {
+				case 9:
+				case 8:
+					$intSecond = (integer) substr( $hrVal,6,2 );
+				case 6:
+				case 5:
+					$intMinute = (integer) substr( $hrVal,3,2 );
+				case 3:
+					$intHour = (integer) substr( $hrVal,0,2 );
+					if( $intHour >= 0 && $intHour <= 23 && $intMinute >= 0 && $intMinute <= 59 && $intSecond >= 0 && $intSecond <= 59 ) {
+						$dteEvent->setTime( $intHour, $intMinute, $intSecond );
+						if( $dteEvent->getTimestamp() < time() ) {
+							// if the event is in the past, add a day.
+							$dteEvent->add(new DateInterval('P1D'));
+						}
+						$hrEvent[] = [ HRATOM => $dteEvent->getTimestamp(), HRTIME => $dteEvent->format('H\hi') ];
+					}
+					break;
+				default:
+					break;
 				}
 			}
 		}
@@ -1162,17 +1226,21 @@ echo '  <timezone>'. $location->timeoffset() .'</timezone>' . chr(13) . chr(10);
 echo '  <sunrise>'. $location->sunrise_hour() .'</sunrise>' . chr(13) . chr(10);	
 echo '  <sunset>'. $location->sunset_hour() .'</sunset>' . chr(13) . chr(10);
 
+// convert timestamps to DateTime object to display in observatory timezone, for to be sure
+$dteDisplayTime = new DateTime();
+$dteDisplayTime->setTimezone( $tzEvent );
+
 echo '  <suntimes>' . chr(13) . chr(10);
-echo '   <transit atomic="'.$location->get_transit().'">'. date('H\hi',$location->get_transit()) .'</transit>' . chr(13) . chr(10);
-echo '   <sunset atomic="'.$location->get_sunset().'">'. date('H\hi',$location->get_sunset()) .'</sunset>' . chr(13) . chr(10);
-echo '   <civiltwilightends atomic="'.$location->get_civiltwilightends().'">'. date('H\hi',$location->get_civiltwilightends()) .'</civiltwilightends>' . chr(13) . chr(10);
-echo '   <nauticaltwilightends atomic="'.$location->get_nauticaltwilightends().'">'. date('H\hi',$location->get_nauticaltwilightends()) .'</nauticaltwilightends>' . chr(13) . chr(10);
-echo '   <astrotwilightends atomic="'.$location->get_astrotwilightends().'">'. date('H\hi',$location->get_astrotwilightends()) .'</astrotwilightends>' . chr(13) . chr(10);
-echo '   <opposition atomic="'.$location->get_opposition().'">'. date('H\hi',$location->get_opposition()) .'</opposition>' . chr(13) . chr(10);
-echo '   <astrotwilightbegins atomic="'.$location->get_astrotwilightbegins().'">'. date('H\hi',$location->get_astrotwilightbegins()) .'</astrotwilightbegins>' . chr(13) . chr(10);
-echo '   <nauticaltwilightbegins atomic="'.$location->get_nauticaltwilightbegins().'">'. date('H\hi',$location->get_nauticaltwilightbegins()) .'</nauticaltwilightbegins>' . chr(13) . chr(10);
-echo '   <civiltwilightbegins atomic="'.$location->get_civiltwilightbegins().'">'. date('H\hi',$location->get_civiltwilightbegins()) .'</civiltwilightbegins>' . chr(13) . chr(10);
-echo '   <sunrise atomic="'.$location->get_sunrise().'">'. date('H\hi',$location->get_sunrise()) .'</sunrise>' . chr(13) . chr(10);
+echo '   <transit atomic="'.$location->get_transit().'">'. $dteDisplayTime->setTimestamp( $location->get_transit() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</transit>' . chr(13) . chr(10);
+echo '   <sunset atomic="'.$location->get_sunset().'">'. $dteDisplayTime->setTimestamp( $location->get_sunset() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' )  .'</sunset>' . chr(13) . chr(10);
+echo '   <civiltwilightends atomic="'.$location->get_civiltwilightends().'">'. $dteDisplayTime->setTimestamp( $location->get_civiltwilightends() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' )  .'</civiltwilightends>' . chr(13) . chr(10);
+echo '   <nauticaltwilightends atomic="'.$location->get_nauticaltwilightends().'">'. $dteDisplayTime->setTimestamp( $location->get_nauticaltwilightends() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' )  .'</nauticaltwilightends>' . chr(13) . chr(10);
+echo '   <astrotwilightends atomic="'.$location->get_astrotwilightends().'">'. $dteDisplayTime->setTimestamp( $location->get_astrotwilightends() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' )  .'</astrotwilightends>' . chr(13) . chr(10);
+echo '   <opposition atomic="'.$location->get_opposition().'">'. $dteDisplayTime->setTimestamp( $location->get_opposition() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' )  .'</opposition>' . chr(13) . chr(10);
+echo '   <astrotwilightbegins atomic="'.$location->get_astrotwilightbegins().'">'. $dteDisplayTime->setTimestamp( $location->get_astrotwilightbegins() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' )  .'</astrotwilightbegins>' . chr(13) . chr(10);
+echo '   <nauticaltwilightbegins atomic="'.$location->get_nauticaltwilightbegins().'">'. $dteDisplayTime->setTimestamp( $location->get_nauticaltwilightbegins() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' )  .'</nauticaltwilightbegins>' . chr(13) . chr(10);
+echo '   <civiltwilightbegins atomic="'.$location->get_civiltwilightbegins().'">'. $dteDisplayTime->setTimestamp( $location->get_civiltwilightbegins() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' )  .'</civiltwilightbegins>' . chr(13) . chr(10);
+echo '   <sunrise atomic="'.$location->get_sunrise().'">'. $dteDisplayTime->setTimestamp( $location->get_sunrise() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' )  .'</sunrise>' . chr(13) . chr(10);
 echo '  </suntimes>' . chr(13) . chr(10);
 }	
 
@@ -1200,7 +1268,7 @@ $objMoonRise = new Moon( $objMoon->rise(), $location );
 $objMoonSet = new Moon( $objMoon->set(), $location );
 if( $blnVerbose ) {
 echo '  <moontimes>' . chr(13) . chr(10);
-echo '   <moonrise atomic="'.$objMoon->rise()->getTimestamp().'">'. date('Ymd H\hi',$objMoon->rise()->getTimestamp()) .'</moonrise>' . chr(13) . chr(10);
+echo '   <moonrise atomic="'.$objMoon->rise()->getTimestamp().'">'. $dteDisplayTime->setTimestamp( $objMoon->rise()->getTimestamp() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</moonrise>' . chr(13) . chr(10);
 echo '   <ra radian="'. $objMoonRise->ra() .'">'. ( $objMoonRise->ra() * 12.0 / M_PI) .'</ra>' . chr(13) . chr(10);
 echo '   <dec radian="'. $objMoonRise->dec() .'">'. ( $objMoonRise->dec() * 180.0 / M_PI) .'</dec>' . chr(13) . chr(10);
 echo '   <phase>'. $objMoon->illumination()['phase'] .'</phase>' . chr(13) . chr(10);
@@ -1208,7 +1276,7 @@ echo '   <illum>'. $objMoon->illumination()['fraction'] .'</illum>' . chr(13) . 
 echo '   <phasename>'. $objMoon->illumination()['name'] .'</phasename>' . chr(13) . chr(10);
 echo '   <ra radian="'. $objMoon->ra() .'">'. ( $objMoon->ra() * 12.0 / M_PI) .'</ra>' . chr(13) . chr(10);
 echo '   <dec radian="'. $objMoon->dec() .'">'. ( $objMoon->dec() * 180.0 / M_PI) .'</dec>' . chr(13) . chr(10);
-echo '   <moonset atomic="'.$objMoon->set()->getTimestamp().'">'. date('Ymd H\hi',$objMoon->set()->getTimestamp()) .'</moonset>' . chr(13) . chr(10);
+echo '   <moonset atomic="'.$objMoon->set()->getTimestamp().'">'. $dteDisplayTime->setTimestamp( $objMoon->set()->getTimestamp() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</moonset>' . chr(13) . chr(10);
 echo '   <ra radian="'. $objMoonSet->ra() .'">'. ( $objMoonSet->ra() * 12.0 / M_PI) .'</ra>' . chr(13) . chr(10);
 echo '   <dec radian="'. $objMoonSet->dec() .'">'. ( $objMoonSet->dec() * 180.0 / M_PI) .'</dec>' . chr(13) . chr(10);
 echo '  </moontimes>' . chr(13) . chr(10);
@@ -1559,26 +1627,28 @@ if( $blnVerbose ) {
 }
   }	
 }
+
+// TODO: Check that the rise/set times match reality for St. John's and Fairbanks.
 echo ' <viewing>' . chr(13) . chr(10);
-echo '  <evening>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$location->get_sunset().'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$location->get_sunset()) .'</clockbegin>' . chr(13) . chr(10);
-echo '   <clockend atomic="'.$hrEven[HRATOM].'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$hrEven[HRATOM]) .'</clockend>' . chr(13) . chr(10);
+echo '  <evening>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$location->get_sunset().'">'. $dteDisplayTime->setTimestamp( $location->get_sunset() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</clockbegin>' . chr(13) . chr(10);
+echo '   <clockend atomic="'.$hrEven[HRATOM].'">'. $dteDisplayTime->setTimestamp( $hrEven[HRATOM] )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</clockend>' . chr(13) . chr(10);
 echo '   <viewing>' . ($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[AVGEVENING][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</viewing>' . chr(13) . chr(10);
 echo '  </evening>' . chr(13) . chr(10);
-echo '  <darkestnight>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$location->get_astrotwilightends().'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$location->get_astrotwilightends()) .'</clockbegin>' . chr(13) . chr(10);
-echo '   <clockend atomic="'.$location->get_astrotwilightbegins().'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$location->get_astrotwilightbegins()) .'</clockend>' . chr(13) . chr(10);
+echo '  <darkestnight>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$location->get_astrotwilightends().'">'. $dteDisplayTime->setTimestamp( $location->get_astrotwilightends() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</clockbegin>' . chr(13) . chr(10);
+echo '   <clockend atomic="'.$location->get_astrotwilightbegins().'">'. $dteDisplayTime->setTimestamp( $location->get_astrotwilightbegins() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</clockend>' . chr(13) . chr(10);
 echo '   <viewing>' . ($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[AVGASTROTWILIGHT][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</viewing>' . chr(13) . chr(10);
 echo '  </darkestnight>' . chr(13) . chr(10);
-echo '  <overnight>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$hrEven[HRATOM].'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$hrEven[HRATOM]) .'</clockbegin>' . chr(13) . chr(10);
-echo '   <clockend atomic="'.$hrMorn[HRATOM].'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$hrMorn[HRATOM]) .'</clockend>' . chr(13) . chr(10);
+echo '  <overnight>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$hrEven[HRATOM].'">'. $dteDisplayTime->setTimestamp( $hrEven[HRATOM] )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</clockbegin>' . chr(13) . chr(10);
+echo '   <clockend atomic="'.$hrMorn[HRATOM].'">'. $dteDisplayTime->setTimestamp( $hrMorn[HRATOM] )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</clockend>' . chr(13) . chr(10);
 echo '   <viewing>' . ($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[AVGNIGHT][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</viewing>' . chr(13) . chr(10);
 echo '  </overnight>' . chr(13) . chr(10);
-echo '  <morning>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$hrMorn[HRATOM].'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$hrMorn[HRATOM]) .'</clockbegin>' . chr(13) . chr(10);
-echo '   <clockend atomic="'.$location->get_sunrise().'">'. date(( $blnVerbose ? 'Ymd ' : '').'H\hi',$location->get_sunrise()) .'</clockend>' . chr(13) . chr(10);
+echo '  <morning>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$hrMorn[HRATOM].'">'. $dteDisplayTime->setTimestamp( $hrMorn[HRATOM] )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</clockbegin>' . chr(13) . chr(10);
+echo '   <clockend atomic="'.$location->get_sunrise().'">'. $dteDisplayTime->setTimestamp( $location->get_sunrise() )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</clockend>' . chr(13) . chr(10);
 echo '   <viewing>' . ($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</viewing>' . chr(13) . chr(10);
 echo '  </morning>' . chr(13) . chr(10);
 foreach( $hrEvent AS $evtKey => $evtVal ) {
-	echo '  <event>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$evtVal[HRATOM].'">'. $evtVal[HRTIME] .'</clockbegin>' . chr(13) . chr(10);
-	echo '   <clockend atomic="'.$evtVal[HRATOM].'">'. $evtVal[HRTIME] .'</clockend>' . chr(13) . chr(10);
+	echo '  <event>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$evtVal[HRATOM].'">'. $dteDisplayTime->setTimestamp( $evtVal[HRATOM] )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</clockbegin>' . chr(13) . chr(10);
+	echo '   <clockend atomic="'.$evtVal[HRATOM].'">'. $dteDisplayTime->setTimestamp( $evtVal[HRATOM] )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</clockend>' . chr(13) . chr(10);
 	echo '   <viewing>' . ($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=9?'Clear':($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</viewing>' . chr(13) . chr(10);
 	echo '  </event>' . chr(13) . chr(10);
 }
