@@ -86,6 +86,15 @@ define('XCLOUDCOVER', 'xcc');
 define('YCLOUDCOVER', 'ycc');
 define('XNORTHAMERICA', 'xna');
 define('YNORTHAMERICA', 'yna');
+define('NECLOUDCOVER', 'northeast');
+define('NWCLOUDCOVER', 'northwest');
+define('SECLOUDCOVER', 'southeast');
+define('SWCLOUDCOVER', 'southwest');
+define('TRNORTHAMERICA', 'transparency');
+define('SENORTHAMERICA', 'seeing');
+define('UVNORTHAMERICA', 'wind');
+define('HRNORTHAMERICA', 'humidity');
+define('TTNORTHAMERICA', 'temperature');
 define('LATITUDE', 'lat');
 define('LONGITUDE', 'lng');
 define('ALTITUDE', 'alt');
@@ -152,10 +161,10 @@ Location
 */
 	private $strObservatory = 'Fred';
 	private $fltGeoposition = [ LATITUDE => 43.650821, LONGITUDE => -79.570732 ];
-	private $intMap1Coordinates = [ MAPPARAM => 'northeast', XCLOUDCOVER => 368, YCLOUDCOVER => 451 ];
+	private $intMap1Coordinates = [ MAPPARAM => NECLOUDCOVER, XCLOUDCOVER => 368, YCLOUDCOVER => 451 ];
 	private $intMap2Coordinates = [ XNORTHAMERICA => 501, YNORTHAMERICA => 316 ];
 	private $fltTimeZoneOffset = -4.0;
-	private $fltTimeZoneAdjustment = 0.0; 
+	private $fltTimeZoneAdjustment = 14400.0; 
 	private $intSunrise;
 	private $intSunset;
 	
@@ -173,29 +182,33 @@ Location
 	private $dteMoonset;
 
 	private $arrObservatory = [ 
-		'Fred' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 367, YCLOUDCOVER => 450, XNORTHAMERICA => 500, YNORTHAMERICA => 315, LATITUDE => 43.650821, LONGITUDE => -79.570732, ALTITUDE => 110, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
-		'Mississauga' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 367, YCLOUDCOVER => 452, XNORTHAMERICA => 500, YNORTHAMERICA => 315, LATITUDE => 43.5802, LONGITUDE => -79.61658, ALTITUDE => 110, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
-		'Victoria' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 258, YCLOUDCOVER => 492, XNORTHAMERICA => 143, YNORTHAMERICA => 322, LATITUDE => 48.433, LONGITUDE => -123.35, ALTITUDE => 18, TZOFFSET => -8, TZLOCAL => 'America/Vancouver' ],
-		'Winnipeg' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 596, YCLOUDCOVER => 470, XNORTHAMERICA => 333, YNORTHAMERICA => 309, LATITUDE => 49.68, LONGITUDE => -98.229, ALTITUDE => 232, TZOFFSET => -6, TZLOCAL => 'America/Winnipeg' ],
-		'Orono' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 375, YCLOUDCOVER => 438, XNORTHAMERICA => 505, YNORTHAMERICA => 307, LATITUDE => 43.9518, LONGITUDE => -78.61700, ALTITUDE => 164, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
-		'Torrance Barrens' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 354, YCLOUDCOVER => 428, XNORTHAMERICA => 493, YNORTHAMERICA => 301, LATITUDE => 44.9342, LONGITUDE => -79.50111, ALTITUDE => 247, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
-		'Churchill' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 597, YCLOUDCOVER => 277, XNORTHAMERICA => 333, YNORTHAMERICA => 199, LATITUDE => 58.767, LONGITUDE => -94.167, ALTITUDE => 6, TZOFFSET => -6, TZLOCAL => 'America/Winnipeg' ],
-		'St. John\'s' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 581, YCLOUDCOVER => 128, XNORTHAMERICA => 626, YNORTHAMERICA => 125, LATITUDE => 47.55, LONGITUDE => -52.667, ALTITUDE => 18, TZOFFSET => -3.5, TZLOCAL => 'America/St_Johns' ],
-		'Thunder Bay' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 199, YCLOUDCOVER => 430, XNORTHAMERICA => 402, YNORTHAMERICA => 302, LATITUDE => 48.2802777778, LONGITUDE => -89.5372222222, ALTITUDE => 187, TZOFFSET => -6, TZLOCAL => 'America/Thunder_Bay' ],
-		'Iqaluit' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 235, YCLOUDCOVER => 64, XNORTHAMERICA => 423, YNORTHAMERICA => 87, LATITUDE => 63.7330, LONGITUDE => -68.50000, ALTITUDE => 11, TZOFFSET => -5, TZLOCAL => 'America/Iqaluit' ],
-		'Fairbanks' => [ MAPPARAM => 'northwest', XCLOUDCOVER => 150, YCLOUDCOVER => 91, XNORTHAMERICA => 81, YNORTHAMERICA => 96, LATITUDE => 64.838, LONGITUDE => -147.716, ALTITUDE => 136, TZOFFSET => -9, TZLOCAL => 'America/Juneau' ],
-		'Colbeck' => [ MAPPARAM => 'northeast', XCLOUDCOVER => 353, YCLOUDCOVER => 451, XNORTHAMERICA => 492, YNORTHAMERICA => 315, LATITUDE => 43.99, LONGITUDE => -80.3622222222, ALTITUDE => 488, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ] ];
+		'Fred' => [ MAPPARAM => NECLOUDCOVER, XCLOUDCOVER => 367, YCLOUDCOVER => 450, XNORTHAMERICA => 500, YNORTHAMERICA => 315, LATITUDE => 43.650821, LONGITUDE => -79.570732, ALTITUDE => 110, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
+		'Mississauga' => [ MAPPARAM => NECLOUDCOVER, XCLOUDCOVER => 367, YCLOUDCOVER => 452, XNORTHAMERICA => 500, YNORTHAMERICA => 315, LATITUDE => 43.5802, LONGITUDE => -79.61658, ALTITUDE => 110, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
+		'Victoria' => [ MAPPARAM => NWCLOUDCOVER, XCLOUDCOVER => 258, YCLOUDCOVER => 492, XNORTHAMERICA => 143, YNORTHAMERICA => 322, LATITUDE => 48.433, LONGITUDE => -123.35, ALTITUDE => 18, TZOFFSET => -8, TZLOCAL => 'America/Vancouver' ],
+		'Winnipeg' => [ MAPPARAM => NWCLOUDCOVER, XCLOUDCOVER => 596, YCLOUDCOVER => 470, XNORTHAMERICA => 333, YNORTHAMERICA => 309, LATITUDE => 49.68, LONGITUDE => -98.229, ALTITUDE => 232, TZOFFSET => -6, TZLOCAL => 'America/Winnipeg' ],
+		'Orono' => [ MAPPARAM => NECLOUDCOVER, XCLOUDCOVER => 375, YCLOUDCOVER => 438, XNORTHAMERICA => 505, YNORTHAMERICA => 307, LATITUDE => 43.9518, LONGITUDE => -78.61700, ALTITUDE => 164, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
+		'Torrance Barrens' => [ MAPPARAM => NECLOUDCOVER, XCLOUDCOVER => 354, YCLOUDCOVER => 428, XNORTHAMERICA => 493, YNORTHAMERICA => 301, LATITUDE => 44.9342, LONGITUDE => -79.50111, ALTITUDE => 247, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ],
+		'Churchill' => [ MAPPARAM => NWCLOUDCOVER, XCLOUDCOVER => 597, YCLOUDCOVER => 277, XNORTHAMERICA => 333, YNORTHAMERICA => 199, LATITUDE => 58.767, LONGITUDE => -94.167, ALTITUDE => 6, TZOFFSET => -6, TZLOCAL => 'America/Winnipeg' ],
+		'St. John\'s' => [ MAPPARAM => NECLOUDCOVER, XCLOUDCOVER => 581, YCLOUDCOVER => 128, XNORTHAMERICA => 626, YNORTHAMERICA => 125, LATITUDE => 47.55, LONGITUDE => -52.667, ALTITUDE => 18, TZOFFSET => -3.5, TZLOCAL => 'America/St_Johns' ],
+		'Thunder Bay' => [ MAPPARAM => NECLOUDCOVER, XCLOUDCOVER => 199, YCLOUDCOVER => 430, XNORTHAMERICA => 402, YNORTHAMERICA => 302, LATITUDE => 48.2802777778, LONGITUDE => -89.5372222222, ALTITUDE => 187, TZOFFSET => -6, TZLOCAL => 'America/Thunder_Bay' ],
+		'Iqaluit' => [ MAPPARAM => NECLOUDCOVER, XCLOUDCOVER => 235, YCLOUDCOVER => 64, XNORTHAMERICA => 423, YNORTHAMERICA => 87, LATITUDE => 63.7330, LONGITUDE => -68.50000, ALTITUDE => 11, TZOFFSET => -5, TZLOCAL => 'America/Iqaluit' ],
+		'Fairbanks' => [ MAPPARAM => NWCLOUDCOVER, XCLOUDCOVER => 150, YCLOUDCOVER => 91, XNORTHAMERICA => 81, YNORTHAMERICA => 96, LATITUDE => 64.838, LONGITUDE => -147.716, ALTITUDE => 136, TZOFFSET => -9, TZLOCAL => 'America/Juneau' ],
+		'Colbeck' => [ MAPPARAM => NECLOUDCOVER, XCLOUDCOVER => 353, YCLOUDCOVER => 451, XNORTHAMERICA => 492, YNORTHAMERICA => 315, LATITUDE => 43.99, LONGITUDE => -80.3622222222, ALTITUDE => 488, TZOFFSET => -5, TZLOCAL => 'America/Toronto' ] ];
 /***  Other areas to validate Lat/Lng calculations
 southwest
 Anaheim: lat-long 33.8350 -117.91400; cloud2: (199, 465); trans2: (163, 508); wind2: (163, 508); hum2: (163, 508); temp2: (163, 508); seeing2: (163, 508)
-Seattle: lat-long 47.6060 -122.33100; trans2: (149, 333); wind2: (149, 333); hum2: (149, 333); temp2: (149, 333); seeing2: (149, 333); cloud2: (269, 512)
 Butte: lat-long 46.0040 -112.53400; cloud2: (325, 169); trans2: (226, 360); wind2: (226, 361); hum2: (226, 361); temp2: (226, 361); seeing2: (226, 360)
-Austin: lat-long 30.2670 -97.74300; trans2: (393, 542); wind2: (393, 542); hum2: (393, 542); temp2: (393, 543); seeing2: (393, 542); cloud2: (184, 519)
-Dallas: lat-long 32.7830 -96.80000; trans2: (395, 507); wind2: (396, 507); hum2: (395, 507); temp2: (395, 507); seeing2: (395, 507); cloud2: (189, 453)
-Houston: lat-long 29.7630 -95.36300; trans2: (422, 542); wind2: (422, 542); hum2: (422, 542); temp2: (422, 542); seeing2: (422, 542); cloud2: (238, 518)
+Portland: lat-long 45.5240 -122.67500; cloud2: (155, 161); trans2: (141, 356); wind2: (141, 357); hum2: (141, 357); temp2: (141, 357); seeing2: (141, 356)
+Albuquerque: lat-long 35.0840 -106.65100; cloud2: (443, 438); trans2: (285, 495); wind2: (285, 495); hum2: (285, 495); temp2: (285, 495); seeing2: (285, 495)
+
+northwest:
+Seattle: lat-long 47.6060 -122.33100; trans2: (149, 333); wind2: (149, 333); hum2: (149, 333); temp2: (149, 333); seeing2: (149, 333); cloud2: (269, 512)
 
 southeast
 Mobile: lat-long 30.6954 -88.03990; trans2: (499, 500); wind2: (498, 502); hum2: (498, 502); temp2: (498, 502); seeing2: (499, 500); cloud2: (381, 444)
+Austin: lat-long 30.2670 -97.74300; trans2: (393, 542); wind2: (393, 542); hum2: (393, 542); temp2: (393, 543); seeing2: (393, 542); cloud2: (184, 519)
+Dallas: lat-long 32.7830 -96.80000; trans2: (395, 507); wind2: (396, 507); hum2: (395, 507); temp2: (395, 507); seeing2: (395, 507); cloud2: (189, 453)
+Houston: lat-long 29.7630 -95.36300; trans2: (422, 542); wind2: (422, 542); hum2: (422, 542); temp2: (422, 542); seeing2: (422, 542); cloud2: (238, 518)
 Chicago: lat-long 41.8500 -87.65000; trans2: (446, 368); wind2: (446, 368); hum2: (446, 368); temp2: (446, 368); seeing2: (446, 368); cloud2: (284, 195)
 Hartford: lat-long 41.7640 -72.68600; trans2: (564, 298); wind2: (564, 298); hum2: (564, 298); temp2: (564, 299); cloud2: (475, 422); seeing2: (564, 298)
 Miami: lat-long 25.7740 -80.19400; trans2: (616, 519); wind2: (616, 519); hum2: (616, 519); temp2: (616, 519); seeing2: (616, 519); cloud2: (596, 477)
@@ -206,16 +219,10 @@ Windsor: lat-long 42.3330 -83.03300; trans2: (482, 344); wind2: (482, 344); hum2
 
 */
 // TODO: create child class based on just lat/lng and tz; requires that position is on both maps; alt is to be looked up; tz might be a look up, too; would allow for reversal of data flow where Aurora Watch, Heavens Above would look here for local forecast instead of this fusking for their data.
-	function __construct( $obs = null, $latlng = null ) {
+	function __construct( $obs = null ) {
 		if( is_null( $obs ) ) {
-			if( is_null( $latlng ) ) {
-				$obs = $this->strObservatory;
-				// TODO: echo 'Unknown observatory:'. $obs . chr(13) . chr(10);
-			}
-			else {
-				$obs = 'Unknown';
-				// TODO: echo 'Unknown observatory:'. $obs . chr(13) . chr(10);
-			}
+			$obs = $this->strObservatory;
+			// TODO: echo 'Unknown observatory:'. $obs . chr(13) . chr(10);
 		}
 		else {
 			switch( $obs ){
@@ -243,97 +250,8 @@ Windsor: lat-long 42.3330 -83.03300; trans2: (482, 344); wind2: (482, 344); hum2
 				$this->intSunset = $this->sunset_hour();
 				break;
 			default:
-				if( is_string( $latlng ) ) {
-					if( strpos( $latlng, ',' ) > 0 ) {
-						$fltLat = (float) substr( $latlng, 0, strpos( $latlng, ',' ) );
-						$fltLng = (float) substr( $latlng, strpos( $latlng, ',' ) +1 );
-						$strMap = '';
-						// Cloud Cover
-						$fltOffsetX = -108.05;
-						$fltOffsetY = -302.68;
-						$fltOffsetLng = 22.6;
-						// $fltOffsetLat = 19.65;
-						$fltFactorX = 18.75;
-						$fltFactorY = 18.75;
-						
-						if( $fltLat >= 74 ||  $fltLat <= 22 || $fltLng >= -49 || $fltLng <= -160 ) { 
-							$obs = $this->strObservatory;
-							// Unknown observatory, No change
-						}
-						if( $fltLat < 74 ) { 
-							if( $fltLat > 43 ) {
-								if( $fltLng < -95 ) {
-									$strMap = 'northwest';
-									$fltOffsetX = 417.95;
-									$fltOffsetY = -75.32; }
-								elseif( $fltLng < -49 ) {
-									$strMap = 'northeast'; 
-									$fltOffsetX = -108.05;
-									$fltOffsetY = -302.68;
-								}
-							}
-							elseif( $fltLat > 22 ) {
-								if( $fltLng < -100 ) {
-									$strMap = 'southwest';
-									$fltOffsetX = 351.95;
-									$fltOffsetY = -317.68; }
-								elseif( $fltLng < -49 ) {
-									$strMap = 'southeast'; 
-									$fltOffsetX = -93.95;
-									$fltOffsetY = -650.68;
-								}
-							}
-						}   	
-						$this->fltGeoposition = [ LATITUDE => $fltLat, LONGITUDE => $fltLng ];
-						$fltDeg2Rad = M_PI / 180.0;
-
-						$fltPixelX = cos( ( $fltLng + $fltOffsetLng) * $fltDeg2Rad ) * ( 90 - $fltLat ) * $fltFactorX + $fltOffsetX;
-						$fltPixelY = -sin( ( $fltLng + $fltOffsetLng) * $fltDeg2Rad ) * ( 90 - $fltLat ) * $fltFactorY + $fltOffsetY;
-
-						$this->intMap1Coordinates = [ MAPPARAM => $strMap, XCLOUDCOVER => floor($fltPixelX + .5), YCLOUDCOVER => floor($fltPixelY + .5) ];
-
-						$fltOffsetX = 222.23;
-						$fltOffsetY = -127.21;
-						$fltOffsetLng = 22.6;
-						$fltFactorX = 10.99;
-						$fltFactorY = 10.99;
-						$fltPixelX = cos( ( $fltLng + $fltOffsetLng) * $fltDeg2Rad ) * ( 90 - $fltLat ) * $fltFactorX + $fltOffsetX;
-						$fltPixelY = -sin( ( $fltLng + $fltOffsetLng) * $fltDeg2Rad ) * ( 90 - $fltLat ) * $fltFactorY + $fltOffsetY;
-
-						$this->intMap2Coordinates = [ XNORTHAMERICA => floor($fltPixelX + .5), YNORTHAMERICA => floor($fltPixelY + .5) ];
-						// $strGoogleAPIkey='AIzaSyDO0vSeg58MtXboS4iJuTT778pKPUAsnl8'; // Browser key
-						$strGoogleAPIkey='';
-						// TODO: https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536,-104.9847034&key=
-						$strLatLng = urlencode( (string)$fltLat .','. (string)$fltLng );
-						$objRequest = file_get_contents('https://maps.googleapis.com/maps/api/elevation/json?locations=' . $strLatLng . '&key=' . $strGoogleAPIkey );
-						$arrJson = json_decode($objRequest, true);	// Return a JSON array
-						// var_dump( $arrJson );
-						$intElevation = ( isset($arrJson['results']['elevation']) ? $arrJson['results']['elevation'] :113 );
-
-						// TODO: https://maps.googleapis.com/maps/api/timezone/json?location=39.7391536,-104.9847034&timestamp=&key=
-						$objRequest = file_get_contents('https://maps.googleapis.com/maps/api/timezone/json?location=' . $strLatLng . '&timestamp=' . time() . '&key=' . $strGoogleAPIkey );
-						$arrJson = json_decode($objRequest, true);	// Return a JSON array
-						// var_dump( $arrJson );
-						$strTimezone = ( isset($arrJson['timeZoneId']) ? $arrJson['timeZoneId'] : TIMEZONE );;
-						$fltTimeoffset = ( isset($arrJson['rawOffset']) && isset($arrJson['dstOffset'])? ($arrJson['rawOffset']+$arrJson['dstOffset'])/ATOMICHOUR : -4.0 );;
-						
-						$this->strObservatory = $obs;
-						$this->arrObservatory[$obs] = [ MAPPARAM => $this->intMap1Coordinates[MAPPARAM], XCLOUDCOVER => $this->intMap1Coordinates[XCLOUDCOVER], YCLOUDCOVER => $this->intMap1Coordinates[YCLOUDCOVER], XNORTHAMERICA => $this->intMap2Coordinates[XNORTHAMERICA], YNORTHAMERICA => $this->intMap2Coordinates[YNORTHAMERICA], LATITUDE => $fltLat, LONGITUDE => $fltLng, ALTITUDE => $intElevation, TZOFFSET => $fltTimeoffset, TZLOCAL => $strTimezone ];
-						//echo 'All observatories:' . chr(13) . chr(10);
-						//print_r($this->arrObservatory);
-
-						$this->intSunrise = $this->sunrise_hour();
-						$this->intSunset = $this->sunset_hour();
-					}
-					else {
-						$obs = $this->strObservatory;
-						// Unknown observatory, No change
-					}
-				}
-				else {
-					$obs = $this->strObservatory;
-					// Unknown observatory, No change
-				}
+				$obs = $this->strObservatory;
+				// Unknown observatory, No change
 				break;
 			}
 		}
@@ -575,10 +493,10 @@ class GeoLocation extends Location {
 // TODO: reverse the calculation that Attila Danko uses to calculate the lat/lng based on the map position. 
 /*
 Assertion: the map uses radial coordinates with the centre off of the map
-re=;  TODO: Define
-longitude_offset=;  TODO: Define
-x_offset=;  TODO: Define
-y_offset=;  TODO: Define
+re=;  TODO: Check with Attila to find out what it's for
+longitude_offset=;  The polar coordinate is skewed by a few degrees
+x_offset=;  The north pole is not on the image 
+y_offset=;  The X,Y coordinates need tbe offset
 Example: northwest cloud_quadrant
 re=1996.44363878;longitude_offset=21.0903036044;x_offset=-80.0592559677;y_offset=-278.039242032;
 Example: northeast cloud_quadrant
@@ -619,10 +537,533 @@ method:
 	use the complement of the latitude to calculate the radius
 	use the complement of the longitude to calculate the angle
 	fit the offsets and test
+	
+	re - a radius modifier specific to each map
+	lng offset - the map is slightly rotated so that 0º longitude is not flat across
+	x offset	y offset - the pole is not in the upper right corner
+         	re   	lng offset	x offset	y offset
+northeast	1996.44	21.09000	-80.06000	-278.04
+southeast	2172.08	20.84000	-98.42000	-696.29
+southwest	2358.48	20.97000	351.03000	-783.7
+northwest	2088.74	20.88000	429.19000	-282.4
+
+	r2 = re squared
+	h2 = hypotenuse squared
+	s = slope
+
+	a=(r2 - h2) / (r2 + h2)
+	h2 = ( r2 - a * r2 ) / a - 1
+	s = y / x
+	h2 = x2 + y2
+
+	a = sin( LatRad )
+	r2 = re*re
+	h2 = ( r2 - a * r2 ) / a - 1
+	
+	lngNorm = LngDeg - lngOffset
+	LngRad = lngNorm*deg2rad
+	s = tan( LngRad )
+	x = = SQRT( h2 / (1 + 1/s ) )
+	y = x * s
+	xMap = floor(x+xOffset +.5)
+	yMap = floor(y+yOffset +.5)
+
 */
 
-	function __construct( $geoPos = [ LATITUDE => 43.650821, LONGITUDE => -79.570732 ] ) {
+// GeoLocation
+	private $strObservatory = 'Unknown';	// Give the observation point a name
+	private $fltGeoposition = [ LATITUDE => 43.650821, LONGITUDE => -79.570732 ];	// Default location is Eatonville (Etobicoke), Ontario
+	private $intMap1Coordinates = [ MAPPARAM => NECLOUDCOVER, XCLOUDCOVER => 368, YCLOUDCOVER => 451 ];	// Default cloud cover map and pixels
+	private $intMap2Coordinates = [ XNORTHAMERICA => 501, YNORTHAMERICA => 316 ];	// Default pixels on North America map
+	private $fltTimeZoneAdjustment = -14400.0; // Time zone offset in seconds
+	private $fltTimeZoneOffset = -4.0;	// Default timezone offset in hours
+	private $strTimeZone = TIMEZONE;
+	private $intSunrise;
+	private $intSunset;
+// GeoLocation
+	
+	private $dteSunrise;
+	private $dteSunset;
+	private $dteTransit;
+	private $dteOpposition;
+	private $dteCTBegin;
+	private $dteCTEnd;
+	private $dteNTBegin;
+	private $dteNTEnd;
+	private $dteATBegin;
+	private $dteATEnd;
+	private $dteMoonrise;
+	private $dteMoonset;
+
+// GeoLocation
+	function __construct( $geoPos = [ LATITUDE => 43.650821, LONGITUDE => -79.570732 ], $obs = 'Unknown' ) {
+		$fltLat = (float)$geoPos[ LATITUDE ];
+		$fltLng = (float)$geoPos[ LONGITUDE ];
+
+		$strMap = '';
+		// Cloud Cover
+		if( $fltLat >= 74 ||  $fltLat <= 22 || $fltLng >= -49 || $fltLng <= -160 ) { 
+			$this->strObservatory = $obs;
+			$this->fltGeoposition = [ LATITUDE => $fltLat, LONGITUDE => $fltLng ];
+			// Unobtainable observation point, No views
+			$strMap = NECLOUDCOVER;
+			$fltPixelX = 16;	// Set the view point to a border colour
+			$fltPixelY = 32;
+			$this->intMap1Coordinates = [ MAPPARAM => $strMap, XCLOUDCOVER => $fltPixelX, YCLOUDCOVER => $fltPixelY ];
+			$fltPixelX = 2; 	// Set the view point to a border 
+			$fltPixelY = 2;
+			$this->intMap2Coordinates = [ XNORTHAMERICA => $fltPixelX, YNORTHAMERICA => $fltPixelY ];
+		}
+		else {
+			if( $fltLat < 74 ) { 
+				if( $fltLat > 43 ) {
+					if( $fltLng < -95 ) {
+						$strMap = NWCLOUDCOVER;
+						$fltOffsetX = 429.191923645;
+						$fltOffsetY = -282.399544304;
+						$fltOffsetLng = 20.8820184467;
+						$fltRSquared = pow(2088.73662456,2); 
+					}
+					elseif( $fltLng < -49 ) {
+						$strMap = NECLOUDCOVER; 
+						$fltOffsetX = -80.0592559677;
+						$fltOffsetY = -278.039242032; 
+						$fltOffsetLng = 21.0903036044;
+						$fltRSquared = pow(1996.44363878,2); 
+					}
+				}
+				elseif( $fltLat > 22 ) {
+					if( $fltLng < -100 ) {
+						$strMap = SWCLOUDCOVER;
+						$fltOffsetX = 351.030821817;
+						$fltOffsetY = -783.700927506; 
+						$fltOffsetLng = 20.9742281431;
+						$fltRSquared = pow(2358.48225263,2); 
+					}
+					elseif( $fltLng < -49 ) {
+						$strMap = SECLOUDCOVER; 
+						$fltOffsetX = -98.4221876369;
+						$fltOffsetY = -696.29098283;
+						$fltOffsetLng = 20.8369967695;
+						$fltRSquared = pow(2172.07869185,2); 
+					}
+				}
+			}
+			$fltDeg2Rad = M_PI / 180.0;
+			$fltAlpha = sin( $fltLat * $fltDeg2Rad );
+			$fltSlope = tan( -( $fltLng + $fltOffsetLng) * $fltDeg2Rad );
+			$fltHypSquared = ( $fltRSquared - $fltAlpha * $fltRSquared ) / ( $fltAlpha + 1 );
+			$fltY = SQRT( $fltHypSquared / ( 1 + 1/$fltSlope/$fltSlope  ) );
+			$fltPixelY = $fltY + $fltOffsetY;
+			$fltX = $fltY / $fltSlope;
+			$fltPixelX = $fltX + $fltOffsetX;
+			// TODO: DELETE LINE 			echo 'step 13:' . $fltLng.chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'step 12:' . $fltLat.chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'step 11:' . $fltLat.chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'step 10:' . $fltAlpha.chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'step  9:' . $fltRSquared.chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'step  8:' . $fltHypSquared.chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'step  5:' . -$fltLng.chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'step  4:' . (-$fltLng - $fltOffsetLng).chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'col  BE:' . $fltSlope.chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'step  2:' . $fltY.chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'step  1:' . $fltX.chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'col   R:' . $fltOffsetY.chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'col   Q:' . $fltOffsetX.chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'col  BC:' . $fltPixelY.chr(13).chr(10);
+			// TODO: DELETE LINE 			echo 'col  BD:' . $fltPixelX.chr(13).chr(10);
+			// TODO: DELETE LINE echo 'fltOffsetX:'. $fltOffsetX . ' fltOffsetY:'. $fltOffsetY . ' fltOffsetLng:'. $fltOffsetLng . ' fltRSquared:'. $fltRSquared .chr(13).chr(10);
+			// TODO: DELETE LINE echo 'Alpha:'. $fltAlpha. ' Slope:'. $fltSlope. ' Hyp:'. $fltHypSquared .' Map:'. $strMap. ' X:'. $fltX. ' Y:'. $fltY .chr(13).chr(10);
+
+			// check if pixel is off of the map or on a text box
+			$arrPixelConfirm = $this->validate_pixel( $strMap, $fltPixelX, $fltPixelY );
+			$this->fltGeoposition = [ LATITUDE => $fltLat, LONGITUDE => $fltLng ];
+			$this->intMap1Coordinates = [ MAPPARAM => $strMap, XCLOUDCOVER => $arrPixelConfirm[LATITUDE], YCLOUDCOVER => $arrPixelConfirm[LONGITUDE] ];
+
+			$fltRSquared=pow(1174.16904765,2);
+			$fltOffsetLng=21.0603019683;
+			$fltOffsetX=237.808527382;
+			$fltOffsetY=-113.650010673;
+			$fltAlpha = sin( $fltLat * $fltDeg2Rad );
+			$fltAlpha = sin( $fltLat * $fltDeg2Rad );
+			$fltSlope = tan( -( $fltLng + $fltOffsetLng) * $fltDeg2Rad );
+			$fltHypSquared = ( $fltRSquared - $fltAlpha * $fltRSquared ) / ( $fltAlpha + 1 );
+			$fltY = SQRT( $fltHypSquared / ( 1 + 1/$fltSlope/$fltSlope  ) );
+			$fltPixelY = $fltY + $fltOffsetY;
+			$fltX = $fltY / $fltSlope;
+			$fltPixelX = $fltX + $fltOffsetX;
+			// TODO: DELETE LINE echo 'Map:'. $strMap. ' X:'. $fltX. ' Y:'. $fltY .chr(13).chr(10);
+	
+			// check if pixel is off of the map or on a text box
+			$arrPixelConfirm = $this->validate_pixel( TRNORTHAMERICA, $fltPixelX, $fltPixelY );
+			$this->intMap2Coordinates = [ XNORTHAMERICA => $arrPixelConfirm[LATITUDE], YNORTHAMERICA => $arrPixelConfirm[LONGITUDE] ];
+		}	   	
+		// $strGoogleAPIkey='AIzaSyDO0vSeg58MtXboS4iJuTT778pKPUAsnl8'; // Browser key
+		$strGoogleAPIkey='AIzaSyBHVGRox44tkYoHtFFIfzSjxuN6IJ-0MgI'; // Elevation key
+		// TODO: https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536,-104.9847034&key=
+		$strLatLng = urlencode( (string)$fltLat .','. (string)$fltLng );
+		$objRequest = file_get_contents('https://maps.googleapis.com/maps/api/elevation/json?locations=' . $strLatLng . '&key=' . $strGoogleAPIkey );
+		$arrJson = json_decode($objRequest, true);	// Return a JSON array
+		// TODO: DELETE LINE  var_dump( $arrJson );
+		$intElevation = ( isset($arrJson['results']['elevation']) ? $arrJson['results']['elevation'] :113 );
+
+		$strGoogleAPIkey='AIzaSyA6vk3c-4SnKzfrzK2qLgH9hQ-NEkLZsIU'; // Timezone key
+		// TODO: https://maps.googleapis.com/maps/api/timezone/json?location=39.7391536,-104.9847034&timestamp=&key=
+		$objRequest = file_get_contents('https://maps.googleapis.com/maps/api/timezone/json?location=' . $strLatLng . '&timestamp=' . time() . '&key=' . $strGoogleAPIkey );
+		$arrJson = json_decode($objRequest, true);	// Return a JSON array
+		// TODO: DELETE LINE  var_dump( $arrJson );
+		$this->strTimeZone = ( isset($arrJson['timeZoneId']) ? $arrJson['timeZoneId'] : TIMEZONE );;
+		$this->fltTimeZoneAdjustment = ( isset($arrJson['rawOffset']) && isset($arrJson['dstOffset'])? ($arrJson['rawOffset']+$arrJson['dstOffset']) : -4.0*ATOMICHOUR );
+		$this->fltTimeZoneOffset = $this->fltTimeZoneAdjustment / ATOMICHOUR;
+		
+		$this->strObservatory = $obs;
+
+		$arrSunInfo = date_sun_info( time(), $fltLat, $fltLng ); 
+		$this->dteTransit = $this->set_transit( $arrSunInfo );
+		$arrTomorrow = date_sun_info( time()+86400, $fltLat, $fltLng ); 
+		$this->dteOpposition = $this->set_opposition( $arrSunInfo, $arrTomorrow );
+		$this->dteSunrise = $this->set_sunrise( $arrTomorrow );
+		$this->dteSunset = $this->set_sunset( $arrSunInfo );
+		$this->dteCTBegin = $this->set_civiltwilightbegins( $arrTomorrow );
+		$this->dteCTEnd = $this->set_civiltwilightends( $arrSunInfo );
+		$this->dteNTBegin = $this->set_nauticaltwilightbegins( $arrTomorrow );
+		$this->dteNTEnd = $this->set_nauticaltwilightends( $arrSunInfo );
+		$this->dteATBegin = $this->set_astrotwilightbegins( $arrTomorrow );
+		$this->dteATEnd = $this->set_astrotwilightends( $arrSunInfo );
+
+		$this->intSunrise = $this->sunrise_hour();
+		$this->intSunset = $this->sunset_hour();
+		// TODO: DELETE LINE  echo 'TZ:'. $this->strTimeZone . ' Timeoffset:' . $this->fltTimeZoneOffset;
 	}
+// GeoLocation
+	// Check if pixel actually checks the weather
+	private function validate_pixel( $strMap, $fltX, $fltY ) {
+		// check if pixel is off of the map or on a text box
+		if( $fltX<=1 || $fltY<=1 || $fltX>=717 || $fltY>=598 
+				|| $fltX>=4 && $fltY>=4 && $fltX<=380 && $fltY<=45 
+				|| $fltX>=660 && $fltY>=196 && $fltX<=715 && $fltY<=596 ) {
+			// TODO: DELETE LINE  echo 'Map:'. $strMap. ' X:'. $fltX. ' Y:'. $fltY .chr(13).chr(10);
+			switch( $strMap ) {
+			case NECLOUDCOVER:
+			case NWCLOUDCOVER:
+			case SECLOUDCOVER:
+			case SWCLOUDCOVER:
+				$intPixelX = 16;
+				$intPixelY = 32;
+				break;
+			case TRNORTHAMERICA:
+				$intPixelX = 2;
+				$intPixelY = 2;
+				break;
+			}
+		}
+		else {
+
+			// Check if the pixel winds up on a border
+			$imgColourReference = imagecreate( 10, 10 );
+			switch( $strMap ) {
+			case NECLOUDCOVER:
+			case NWCLOUDCOVER:
+			case SECLOUDCOVER:
+			case SWCLOUDCOVER:
+				$arrColourReference = 	
+					[
+					[ CRCOLOUR => '#FF0000', CRTEXT => 'border', CRRATING => -1 ],
+					[ CRCOLOUR => '#FBFBFB', CRTEXT => 'Overcast', CRRATING => 0 ],
+					[ CRCOLOUR => '#EAEAEA', CRTEXT => '90% covered', CRRATING => 1 ],
+					[ CRCOLOUR => '#C2C2C2', CRTEXT => '80% covered', CRRATING => 2 ],
+					[ CRCOLOUR => '#AEEEEE', CRTEXT => '70% covered', CRRATING => 3 ],
+					[ CRCOLOUR => '#9ADADA', CRTEXT => '60% covered', CRRATING => 4 ],
+					[ CRCOLOUR => '#77B7F7', CRTEXT => '50% covered', CRRATING => 5 ],
+					[ CRCOLOUR => '#63A3E3', CRTEXT => '40% covered', CRRATING => 6 ],
+					[ CRCOLOUR => '#4F8FCF', CRTEXT => '30% covered', CRRATING => 7 ],
+					[ CRCOLOUR => '#2767A7', CRTEXT => '20% covered' , CRRATING => 8],
+					[ CRCOLOUR => '#135393', CRTEXT => '10% covered', CRRATING => 9 ],
+					[ CRCOLOUR => '#003F7F', CRTEXT => 'Clear', CRRATING => 10 ]
+					];
+				break;
+			case TRNORTHAMERICA:
+				$arrColourReference = 	
+					[
+					[ CRCOLOUR => '#FF0000', CRTEXT => 'border', CRRATING => -1 ],
+					[ CRCOLOUR => '#F9F9F9', CRTEXT => 'Too cloudy to forecast', CRRATING => 0 ],
+					[ CRCOLOUR => '#C7C7C7', CRTEXT => 'Poor', CRRATING => 1 ],
+					[ CRCOLOUR => '#95D5D5', CRTEXT => 'Below Average', CRRATING => 2 ],
+					[ CRCOLOUR => '#63A3E3', CRTEXT => 'Average', CRRATING => 3 ],
+					[ CRCOLOUR => '#2C6CAC', CRTEXT => 'Above average', CRRATING => 4 ],
+					[ CRCOLOUR => '#003F7F', CRTEXT => 'Transparent', CRRATING => 5 ]
+					];
+				break;
+			}
+			foreach( $arrColourReference AS $colref ) {
+				imagecolorallocate( $imgColourReference, hexdec( substr( $colref[ CRCOLOUR ], 1, 2 ) ), hexdec( substr( $colref[ CRCOLOUR ], 3, 2 )), hexdec( substr( $colref[ CRCOLOUR ], 5, 2 )) ); 
+			}
+			switch( $strMap ) {
+			case NECLOUDCOVER:
+				$strLocalAddress = 'data/northeast_I_ASTRO_nt.png';
+				break;
+			case NWCLOUDCOVER:
+				$strLocalAddress = 'data/northwest_I_ASTRO_nt.png';
+				break;
+			case SECLOUDCOVER:
+				$strLocalAddress = 'data/southeast_I_ASTRO_nt.png';
+				break;
+			case SWCLOUDCOVER:
+				$strLocalAddress = 'data/southwest_I_ASTRO_nt.png';
+				break;
+			case TRNORTHAMERICA:
+				$strLocalAddress = 'data/astro_I_ASTRO_transp.png';
+				break;
+			}
+			$imgMap = imagecreatefrompng($strLocalAddress);
+			$intPixelX = floor($fltX + .5);
+			$intPixelY = floor($fltY + .5);
+			$rgb = imagecolorsforindex($imgMap, imagecolorat($imgMap, $intPixelX, $intPixelY ));
+			$index = imagecolorclosest( $imgColourReference, $rgb['red'], $rgb['green'], $rgb['blue'] );
+			$strText = $arrColourReference[ $index ][ CRTEXT ];
+			if( $strText == 'border' ) {
+				// the rounded pixel point is on a border.  find a nearby point.
+				$intPixelX = floor($fltX);
+				$intPixelY = floor($fltY);
+				$rgb = imagecolorsforindex($imgMap, imagecolorat($imgMap, $intPixelX, $intPixelY ));
+				$index = imagecolorclosest( $imgColourReference, $rgb['red'], $rgb['green'], $rgb['blue'] );
+				$strText = $arrColourReference[ $index ][ CRTEXT ];
+				if( $strText == 'border' ) {
+					// the upper left pixel point is also on a border.  find a nearby point.
+					$intPixelX = ceil($fltX);
+					$intPixelY = floor($fltY);
+					$rgb = imagecolorsforindex($imgMap, imagecolorat($imgMap, $intPixelX, $intPixelY ));
+					$index = imagecolorclosest( $imgColourReference, $rgb['red'], $rgb['green'], $rgb['blue'] );
+					$strText = $arrColourReference[ $index ][ CRTEXT ];
+					if( $strText == 'border' ) {
+						// the upper right pixel point is also on a border.  find a nearby point.
+						$intPixelX = floor($fltX);
+						$intPixelY = ceil($fltY);
+						$rgb = imagecolorsforindex($imgMap, imagecolorat($imgMap, $intPixelX, $intPixelY ));
+						$index = imagecolorclosest( $imgColourReference, $rgb['red'], $rgb['green'], $rgb['blue'] );
+						$strText = $arrColourReference[ $index ][ CRTEXT ];
+						if( $strText == 'border' ) {
+							// the lower left pixel point is also on a border.  find a nearby point.
+							$intPixelX = ceil($fltX);
+							$intPixelY = ceil($fltY);
+							$rgb = imagecolorsforindex($imgMap, imagecolorat($imgMap, $intPixelX, $intPixelY ));
+							$index = imagecolorclosest( $imgColourReference, $rgb['red'], $rgb['green'], $rgb['blue'] );
+							$strText = $arrColourReference[ $index ][ CRTEXT ];
+							if( $strText == 'border' ) {
+								// the lower right pixel point is also on a border.  find a nearby point.
+								
+							}
+						}
+					}
+				}
+			}
+
+			imagedestroy( $imgColourReference );
+			imagedestroy( $imgMap );
+			// Finished: Check if the pixel winds up on a border
+			
+		}
+		return [ LATITUDE => $intPixelX, LONGITUDE => $intPixelY ];
+	}
+	
+	private function set_sunrise( $arrInfo = null ){ 
+		if( is_array( $arrInfo ) ) {
+			if( is_numeric( $arrInfo[SUNRISE] ) ) {
+				if( $arrInfo[SUNRISE] == 1 ) {
+					return( $arrInfo[SUNTRANSIT] );
+				}
+				else {
+					return( $arrInfo[SUNRISE] );
+				}
+			}
+			else {
+				return( $this->dteOpposition );
+			}
+		}
+		return( $this->dteSunrise ); 
+	}
+	private function set_sunset( $arrInfo = null ){ 
+		if( is_array( $arrInfo ) ) {
+			if( is_numeric( $arrInfo[SUNSET] ) ) {
+				if( $arrInfo[SUNSET] == 1 ) {
+					return( $arrInfo[SUNTRANSIT] );
+				}
+				else {
+					return( $arrInfo[SUNSET] );
+				}
+			}
+			else {
+				return( $this->dteOpposition );
+			}			
+		}
+		return( $this->dteSunset ); 
+	}
+	private function set_transit( $arrInfo = null ){ 
+		if( is_array( $arrInfo ) ) {
+			return( $arrInfo[SUNTRANSIT] );
+		}
+		return( $this->dteTransit ); 
+	}
+	private function set_opposition( $arrInfo = null, $arrTomorrow = null ){ 
+		if( is_array( $arrInfo ) && is_array( $arrTomorrow ) ) {
+			return( floor( ($arrTomorrow[SUNTRANSIT] + $arrInfo[SUNTRANSIT]) / 2 ) );
+		}
+		return( $this->dteOpposition ); 
+	}
+	private function set_civiltwilightbegins( $arrInfo = null ){ 
+		if( is_array( $arrInfo ) ) {
+			if( is_numeric( $arrInfo[CIVILTWILIGHTBEG] ) ) {
+				if( $arrInfo[CIVILTWILIGHTBEG] == 1 ) {
+					return( $arrInfo[SUNTRANSIT] );
+				}
+				else {
+					return( $arrInfo[CIVILTWILIGHTBEG] );
+				}
+			}
+			else {
+				return( $this->dteOpposition );
+			}			
+		}
+		return( $this->dteCTBegin ); 
+	}
+	private function set_civiltwilightends( $arrInfo = null ){ 
+		if( is_array( $arrInfo ) ) {
+			if( is_numeric( $arrInfo[CIVILTWILIGHTEND] ) ) {
+				if( $arrInfo[CIVILTWILIGHTEND] == 1 ) {
+					return( $arrInfo[SUNTRANSIT] );
+				}
+				else {
+					return( $arrInfo[CIVILTWILIGHTEND] );
+				}
+			}
+			else {
+				return( $this->dteOpposition );
+			}			
+		}
+		return( $this->dteCTEnd ); 
+	}
+	private function set_nauticaltwilightbegins( $arrInfo = null ){ 
+		if( is_array( $arrInfo ) ) {
+			if( is_numeric( $arrInfo[NAUTTWILIGHTBEG] ) ) {
+				if( $arrInfo[NAUTTWILIGHTBEG] == 1 ) {
+					return( $arrInfo[SUNTRANSIT] );
+				}
+				else {
+					return( $arrInfo[NAUTTWILIGHTBEG] );
+				}
+			}
+			else {
+				return( $this->dteOpposition );
+			}			
+		}
+		return( $this->dteNTBegin ); 
+	}
+	private function set_nauticaltwilightends( $arrInfo = null ){ 
+		if( is_array( $arrInfo ) ) {
+			if( is_numeric( $arrInfo[NAUTTWILIGHTEND] ) ) {
+				if( $arrInfo[NAUTTWILIGHTEND] == 1 ) {
+					return( $arrInfo[SUNTRANSIT] );
+				}
+				else {
+					return( $arrInfo[NAUTTWILIGHTEND] );
+				}
+			}
+			else {
+				return( $this->dteOpposition );
+			}			
+		}
+		return( $this->dteNTEnd ); 
+	}
+	private function set_astrotwilightbegins( $arrInfo = null ){ 
+		if( is_array( $arrInfo ) ) {
+			if( is_numeric( $arrInfo[ASTROTWILIGHTBEG] ) ) {
+				if( $arrInfo[ASTROTWILIGHTBEG] == 1 ) {
+					return( $arrInfo[SUNTRANSIT] );
+				}
+				else {
+					return( $arrInfo[ASTROTWILIGHTBEG] );
+				}
+			}
+			else {
+				return( $this->dteOpposition );
+			}			
+		}
+		return( $this->dteATBegin ); 
+	}
+	private function set_astrotwilightends( $arrInfo = null ){ 
+		if( is_array( $arrInfo ) ) {
+			if( is_numeric( $arrInfo[ASTROTWILIGHTEND] ) ) {
+				if( $arrInfo[ASTROTWILIGHTEND] == 1 ) {
+					return( $arrInfo[SUNTRANSIT] );
+				}
+				else {
+					return( $arrInfo[ASTROTWILIGHTEND] );
+				}
+			}
+			else {
+				return( $this->dteOpposition );
+			}			
+		}
+		return( $this->dteATEnd ); 
+	}
+
+// GeoLocation
+	public function get_transit(){ return( $this->dteTransit ); }
+	public function get_opposition(){ return( $this->dteOpposition ); }
+	public function get_sunrise(){ return( $this->dteSunrise ); }
+	public function get_sunset(){ return( $this->dteSunset ); }
+	public function get_civiltwilightbegins(){ return( $this->dteCTBegin ); }
+	public function get_civiltwilightends(){ return( $this->dteCTEnd ); }
+	public function get_nauticaltwilightbegins(){ return( $this->dteNTBegin ); }
+	public function get_nauticaltwilightends(){ return( $this->dteNTEnd ); }
+	public function get_astrotwilightbegins(){ return( $this->dteATBegin ); }
+	public function get_astrotwilightends(){ return( $this->dteATEnd ); }
+// GeoLocation
+	
+	public function observatory() { return( $this->strObservatory ); }
+	
+	public function geoposition(){ return( $this->fltGeoposition ); }
+	
+	public function map1coordinates(){ return( $this->intMap1Coordinates ); }
+	
+	public function map2coordinates(){ return( $this->intMap2Coordinates ); }
+	
+// GeoLocation
+	// Public function to return sunrise time in Local Time.  Must be between 00 and 13.
+	public function sunrise_hour(){
+		if( isset( $this->intSunrise ) ) {
+			$intSunrise = $this->intSunrise;
+		}
+		else {
+			$tzLocal = new DateTimeZone( $this->strTimeZone );
+			$dteLocal = new DateTime( 'now', $tzLocal );
+			$this->fltTimeZoneOffset = $tzLocal->getOffset( $dteLocal )/3600 ;
+			$intSunrise = (integer) date('H',(date_sunrise(time(),SUNFUNCS_RET_TIMESTAMP,$this->fltGeoposition[LATITUDE], $this->fltGeoposition[LONGITUDE],90,$this->fltTimeZoneOffset) ) );
+			$this->intSunrise = $intSunrise;
+		}
+		return $intSunrise;
+	}
+// GeoLocation
+
+	// Public function to return sunset time in Local Time.  Must be over 12.
+	public function sunset_hour(){
+		if( isset( $this->intSunset ) ) {
+			$intSunset = $this->intSunset;
+		}
+		else {
+			$tzLocal = new DateTimeZone( $this->strTimeZone );
+			$dteLocal = new DateTime( 'now', $tzLocal );
+			$this->fltTimeZoneOffset = $tzLocal->getOffset( $dteLocal )/3600 ;
+			$intSunset = (integer) date('H',(date_sunset(time(),SUNFUNCS_RET_TIMESTAMP,$this->fltGeoposition[LATITUDE], $this->fltGeoposition[LONGITUDE],90,$this->fltTimeZoneOffset) ) );
+			$this->intSunset = $intSunset < 12 ? $intSunset + 24 : $intSunset;
+		}
+		return $intSunset;
+	}
+// GeoLocation
+	public function timeoffset() { return( $this->fltTimeZoneOffset ); }
+	public function timezone() { return( $this->strTimeZone ); }
+	public function map() { return( $this->intMap1Coordinates[ MAPPARAM ] ); }
+	
 }
 
 class Night {
@@ -806,32 +1247,32 @@ Weather Map
 			*/
 			if( is_numeric( $date ) && is_numeric( $hour ) ) {
 				switch( $map ) {
-				case 'northeast':
+				case NECLOUDCOVER:
 					$strMap = '_054_R1_north@america@northeast_I_ASTRO_nt_';
 					break;
-				case 'northwest':
+				case NWCLOUDCOVER:
 					$strMap = '_054_R1_north@america@northwest_I_ASTRO_nt_';
 					break;
-				case 'southeast':
+				case SECLOUDCOVER:
 					$strMap = '_054_R1_north@america@southeast_I_ASTRO_nt_';
 					break;
-				case 'southwest':
+				case SWCLOUDCOVER:
 					$strMap = '_054_R1_north@america@southwest_I_ASTRO_nt_';
 					break;
-				case 'transparency':
+				case TRNORTHAMERICA:
 					$strMap = '_054_R1_north@america@astro_I_ASTRO_transp_';
 					break;
-				case 'seeing':
+				case SENORTHAMERICA:
 					$strMap = '_054_R1_north@america@astro_I_ASTRO_seeing_';
 					$hour = substr( '000' . (string) (floor(((integer) $hour +1)/3)*3), -3); 
 					break;
-				case 'wind':
+				case UVNORTHAMERICA:
 					$strMap = '_054_R1_north@america@astro_I_ASTRO_uv_';
 					break;
-				case 'humidity':
+				case HRNORTHAMERICA:
 					$strMap = '_054_R1_north@america@astro_I_ASTRO_hr_';
 					break;
-				case 'temperature':
+				case TTNORTHAMERICA:
 					$strMap = '_054_R1_north@america@astro_I_ASTRO_tt_';
 					break;
 				default: 
@@ -879,32 +1320,32 @@ Weather Map
 		
 		if( is_numeric( $strDateToKeep ) && strlen( $strDateToKeep ) == DATELENGTH ) {
 			switch( $strMapType ) {
-			case 'northeast':
+			case NECLOUDCOVER:
 				$strMap = '_054_R1_north@america@northeast_I_ASTRO_nt_';
 				break;
-			case 'northwest':
+			case NWCLOUDCOVER:
 				$strMap = '_054_R1_north@america@northwest_I_ASTRO_nt_';
 				break;
-			case 'southeast':
+			case SECLOUDCOVER:
 				$strMap = '_054_R1_north@america@southeast_I_ASTRO_nt_';
 				break;
-			case 'southwest':
+			case SWCLOUDCOVER:
 				$strMap = '_054_R1_north@america@southwest_I_ASTRO_nt_';
 				break;
-			case 'transparency':
+			case TRNORTHAMERICA:
 				$strMap = '_054_R1_north@america@astro_I_ASTRO_transp_';
 				break;
-			case 'seeing':
+			case SENORTHAMERICA:
 				$strMap = '_054_R1_north@america@astro_I_ASTRO_seeing_';
 				$hour = substr( '000' . (string) (floor(((integer) $hour +1)/3)*3), -3); 
 				break;
-			case 'wind':
+			case UVNORTHAMERICA:
 				$strMap = '_054_R1_north@america@astro_I_ASTRO_uv_';
 				break;
-			case 'humidity':
+			case HRNORTHAMERICA:
 				$strMap = '_054_R1_north@america@astro_I_ASTRO_hr_';
 				break;
-			case 'temperature':
+			case TTNORTHAMERICA:
 				$strMap = '_054_R1_north@america@astro_I_ASTRO_tt_';
 				break;
 			default: 
@@ -967,10 +1408,10 @@ Weather Analysis
 			return;
 		}
 		switch( $map ){
-		case 'northeast':
-		case 'northwest':
-		case 'southeast':
-		case 'southwest':
+		case NECLOUDCOVER:
+		case NWCLOUDCOVER:
+		case SECLOUDCOVER:
+		case SWCLOUDCOVER:
 			$this->arrColourReference = 	
 				[
 				[ CRCOLOUR => '#FF0000', CRTEXT => 'border', CRRATING => -1 ],
@@ -987,7 +1428,7 @@ Weather Analysis
 				[ CRCOLOUR => '#003F7F', CRTEXT => 'Clear', CRRATING => 10 ]
 				];
 			break;
-		case 'transparency':
+		case TRNORTHAMERICA:
 			$this->arrColourReference = 	
 				[
 				[ CRCOLOUR => '#FF0000', CRTEXT => 'border', CRRATING => -1 ],
@@ -999,7 +1440,7 @@ Weather Analysis
 				[ CRCOLOUR => '#003F7F', CRTEXT => 'Transparent', CRRATING => 5 ]
 				];
 			break;
-		case 'seeing':
+		case SENORTHAMERICA:
 			$this->arrColourReference = 	
 				[
 				[ CRCOLOUR => '#000000', CRTEXT => 'border', CRRATING => -1 ],
@@ -1011,7 +1452,7 @@ Weather Analysis
 				[ CRCOLOUR => '#003F7F', CRTEXT => 'Excellent 5/5', CRRATING => 5 ]
 				];
 			break;
-		case 'wind':
+		case UVNORTHAMERICA:
 			$this->arrColourReference = 	
 				[
 				[ CRCOLOUR => '#000000', CRTEXT => 'border', CRRATING => -1 ],
@@ -1023,7 +1464,7 @@ Weather Analysis
 				[ CRCOLOUR => '#003F7F', CRTEXT => '0 to 8 km/hr', CRRATING => 5 ]
 				];
 			break;
-		case 'humidity':
+		case HRNORTHAMERICA:
 			$this->arrColourReference = 	
 				[
 				[ CRCOLOUR => '#000000', CRTEXT => 'border', CRRATING => -1 ],
@@ -1045,7 +1486,7 @@ Weather Analysis
 				[ CRCOLOUR => '#E10000', CRTEXT => '95% to 100%', CRRATING => 0 ] 
 				];
 			break;
-		case 'temperature':
+		case TTNORTHAMERICA:
 			$this->arrColourReference = 	
 				[
 				[ CRCOLOUR => '#000000', CRTEXT => 'border', CRRATING => -1 ],
@@ -1170,6 +1611,7 @@ class Moon extends Planet {
 
 // TODO: Use XML object to build this XML code.
 echo '<?xml version="1.0" encoding="UTF-8"?>' . chr(13) . chr(10);
+echo '<?xml-stylesheet type="text/css" href="astroforecastCSS.css"?>' . chr(13) . chr(10);
 /*
 XML structure
 + astroforecast
@@ -1233,12 +1675,20 @@ echo '<astroforecast>' . chr(13) . chr(10);
  *    verbose: show your work
  **/ 
 if( isset( $_GET['latlng'] ) ) {
-	if( isset( $_GET['obs'] ) ) {
-	$location = new Location($_GET['obs'],$_GET['latlng']);
-	}
+	if( is_string( $_GET['latlng'] ) ) {
+		if( strpos( $_GET['latlng'], ',' ) > 0 ) {
+			$fltLat = (float) substr( $_GET['latlng'], 0, strpos( $_GET['latlng'], ',' ) );
+			$fltLng = (float) substr( $_GET['latlng'], strpos( $_GET['latlng'], ',' ) +1 );
+			if( isset( $_GET['obs'] ) ) {
+				$location = new GeoLocation([LATITUDE=>$fltLat,LONGITUDE=>$fltLng],$_GET['obs']);
+			}
+			else {
+				$location = new GeoLocation([LATITUDE=>$fltLat,LONGITUDE=>$fltLng]);
+			}
+		}
+ 	}
 	else {
-	$location = new Location();
-	$location->setLatLng( $_GET['latlng'] );
+		$location = new Location();
 	}
 }	
 elseif( isset( $_GET['obs'] ) ) {
@@ -1451,7 +1901,7 @@ foreach( $arrHours AS $key => $val ) {
 }
 }
 
-$maps = [ 'northeast', 'northwest', 'southeast', 'southwest', 'transparency', 'seeing', 'wind', 'humidity', 'temperature' ];
+$maps = [ NECLOUDCOVER, NWCLOUDCOVER, SECLOUDCOVER, SWCLOUDCOVER, TRNORTHAMERICA, SENORTHAMERICA, UVNORTHAMERICA, HRNORTHAMERICA, TTNORTHAMERICA ];
 // TODO: dusk to dawn
 $strDusk = substr( '000' . (string)($location->sunset_hour()  +5  -(integer)$night->get_twelve()), -3);
 $strDawn = substr( '000' . (string)($location->sunrise_hour() +29 -(integer)$night->get_twelve()), -3);
@@ -1493,11 +1943,11 @@ if( $blnVerbose ) {
 	foreach( $maps AS $mapkey => $mapval ) {
 	  switch( $mapval ) {
 	  case $location->map():
-	  case 'transparency':
-	  case 'seeing':
-	  case 'wind':
-	  case 'humidity':
-	  case 'temperature':
+	  case TRNORTHAMERICA:
+	  case SENORTHAMERICA:
+	  case UVNORTHAMERICA:
+	  case HRNORTHAMERICA:
+	  case TTNORTHAMERICA:
 		$map = new Weather_Map( $location->observatory(), $night->get_date(), $hourkey, $mapval );
 		// TODO: MIME an image?
 if( $blnVerbose ) {
@@ -1509,10 +1959,10 @@ if( $blnVerbose ) {
 }
 		
 		switch( $mapval ){
-		case 'northeast':
-		case 'northwest':
-		case 'southeast':
-		case 'southwest':
+		case NECLOUDCOVER:
+		case NWCLOUDCOVER:
+		case SECLOUDCOVER:
+		case SWCLOUDCOVER:
 			$weather = new Weather_Analysis( $map->local(), $location->map1coordinates()[XCLOUDCOVER], $location->map1coordinates()[YCLOUDCOVER], $mapval );
 			break;
 		default:
@@ -1529,10 +1979,10 @@ if( $blnVerbose ) {
 
 // TODO:  Can I see anything?
 		switch( $mapval ) {
-		case 'northeast':
-		case 'northwest':
-		case 'southeast':
-		case 'southwest':
+		case NECLOUDCOVER:
+		case NWCLOUDCOVER:
+		case SECLOUDCOVER:
+		case SWCLOUDCOVER:
 			$intCloudCoverRating = $weather->get_rating();
 			if( $hourval[HRATOM] >= $location->get_astrotwilightends() && $hourval[HRATOM] <= $location->get_astrotwilightbegins() ) {
 				// Astronomical twilight has the darkest skies. The period between is the darkest. Stars up to Magnitude 6 are visible. 
@@ -1568,7 +2018,7 @@ if( $blnVerbose ) {
 				}
 			}
 			break;
-		case 'transparency':
+		case TRNORTHAMERICA:
 			$intTemperatureRating = $weather->get_rating();
 			if( $hourval[HRATOM] >= ASTROTWILIGHTEND && $hourval[HRATOM] <= ASTROTWILIGHTBEG ) {
 				// Astronomical twilight has the darkest skies. The period between is the darkest. Stars up to Magnitude 6 are visible. 
@@ -1591,7 +2041,7 @@ if( $blnVerbose ) {
 				}
 			}
 			break;
-		case 'seeing':
+		case SENORTHAMERICA:
 			$intSeeingRating = $weather->get_rating();
 			if( $hourval[HRATOM] >= ASTROTWILIGHTEND && $hourval[HRATOM] <= ASTROTWILIGHTBEG ) {
 				// Astronomical twilight has the darkest skies. The period between is the darkest. Stars up to Magnitude 6 are visible. 
@@ -1614,7 +2064,7 @@ if( $blnVerbose ) {
 				}
 			}
 			break;
-		case 'wind':
+		case UVNORTHAMERICA:
 			$intWindRating = $weather->get_rating();
 			if( $hourval[HRATOM] >= ASTROTWILIGHTEND && $hourval[HRATOM] <= ASTROTWILIGHTBEG ) {
 				// Astronomical twilight has the darkest skies. The period between is the darkest. Stars up to Magnitude 6 are visible. 
@@ -1637,7 +2087,7 @@ if( $blnVerbose ) {
 				}
 			}
 			break;
-		case 'humidity':
+		case HRNORTHAMERICA:
 			$intHumidityRating = $weather->get_rating();
 			if( $hourval[HRATOM] >= ASTROTWILIGHTEND && $hourval[HRATOM] <= ASTROTWILIGHTBEG ) {
 				// Astronomical twilight has the darkest skies. The period between is the darkest. Stars up to Magnitude 6 are visible. 
@@ -1660,7 +2110,7 @@ if( $blnVerbose ) {
 				}
 			}
 			break;
-		case 'temperature':
+		case TTNORTHAMERICA:
 			$intTemperatureRating = $weather->get_rating();
 			if( $hourval[HRATOM] >= ASTROTWILIGHTEND && $hourval[HRATOM] <= ASTROTWILIGHTBEG ) {
 				// Astronomical twilight has the darkest skies. The period between is the darkest. Stars up to Magnitude 6 are visible. 
