@@ -105,7 +105,6 @@ define('CRRATING', 'rating');
 
 define('HRTIME', 'Time');
 define('HRATOM', 'Atomic');
-define('HREVENT', 'Event');
 define('ATOMICHOUR', 3600);
 
 define('AVGEVENING', 'evening');
@@ -1728,18 +1727,13 @@ if( isset( $_GET['ts'] ) ) {
 		}
 	}
 	elseif( is_array( $_GET['ts'] ) ) {
-		foreach( $_GET['ts'] AS $tsEvt => $tsVal ) {
+		foreach( $_GET['ts'] AS $tsVal ) {
 			if( is_numeric( $tsVal ) ) {
 				if( (integer)$tsVal > time() ) {
 					$dteEvent = new DateTime; 
 					$dteEvent->setTimestamp( $tsVal ); 
 					$dteEvent->setTimezone( $tzEvent );
-					if( is_numeric( $tsEvt ) ) {
-						$hrEvent[] = [ HRATOM => $dteEvent->getTimestamp(), HRTIME => $dteEvent->format('H\hi') ];
-					}
-					else {
-						$hrEvent[] = [ HRATOM => $dteEvent->getTimestamp(), HRTIME => $dteEvent->format('H\hi'), HREVENT => $tsEvt ];
-					}
+					$hrEvent[] = [ HRATOM => $dteEvent->getTimestamp(), HRTIME => $dteEvent->format('H\hi') ];
 				}
 			}
 		}
@@ -1777,7 +1771,7 @@ if( isset( $_GET['hr'] ) ) {
 		}
 	}
 	elseif( is_array( $_GET['hr'] ) ) {
-		foreach( $_GET['hr'] AS $hrEvt => $hrVal ) {
+		foreach( $_GET['hr'] AS $hrVal ) {
 			if( is_string( $hrVal ) ) {
 				$intHour = 0;
 				$intMinute = 0;
@@ -1797,13 +1791,7 @@ if( isset( $_GET['hr'] ) ) {
 							// if the event is in the past, add a day.
 							$dteEvent->add( DateInterval::createFromDateString('1 day') );
 						}
-						// if request came with an event name, add that too.  REMEMBER, make event name XML SAFE, but not here.
-						if( is_numeric( $hrEvt ) ) {
-							$hrEvent[] = [ HRATOM => $dteEvent->getTimestamp(), HRTIME => $dteEvent->format('H\hi') ];
-						}
-						else {
-							$hrEvent[] = [ HRATOM => $dteEvent->getTimestamp(), HRTIME => $dteEvent->format('H\hi'), HREVENT => $hrEvt ];
-						}
+						$hrEvent[] = [ HRATOM => $dteEvent->getTimestamp(), HRTIME => $dteEvent->format('H\hi') ];
 					}
 					break;
 				default:
@@ -1819,7 +1807,7 @@ $dteDisplayTime = new DateTime();
 $dteDisplayTime->setTimezone( $tzEvent );
 
 echo ' <observatory>' . chr(13) . chr(10);
-echo '  <observatory>'. htmlspecialchars( $location->observatory(), ENT_XML1 | ENT_COMPAT, 'UTF-8') .'</observatory>' . chr(13) . chr(10);
+echo '  <observatory>'. $location->observatory() .'</observatory>' . chr(13) . chr(10);
 echo '  <latitude>';
 echo $location->geoposition()[ LATITUDE ];
 echo '</latitude>' . chr(13) . chr(10);
@@ -2297,9 +2285,7 @@ echo '   <clockend atomic="'.$location->get_sunrise().'">'. $dteDisplayTime->set
 echo '   <view>' . ($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=9?($intTransparencyAverage[AVGMORN][AVGAVERAGE]>=5?($intSeeingAverage[AVGMORN][AVGAVERAGE]>=5?'Clear, with little twinkle':'Clear, with some twinkle'):($intTransparencyAverage[AVGMORN][AVGAVERAGE]>=4?($intSeeingAverage[AVGMORN][AVGAVERAGE]>=5?'Clear, with a little haze but little twinkle':'Clear, with a little haze and some twinkle'):'Clear, with a lot of haze')):($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[AVGMORN][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</view>' . chr(13) . chr(10);
 echo '  </morning>' . chr(13) . chr(10);
 foreach( $hrEvent AS $evtKey => $evtVal ) {
-	echo '  <event>' . chr(13) . chr(10);
-	if( isset($evtVal[HREVENT]) ) echo '   <comment>'. htmlspecialchars( $evtVal[HREVENT], ENT_XML1 | ENT_COMPAT, 'UTF-8') .'</comment>' . chr(13) . chr(10);
-	echo '   <clockbegin atomic="'.$evtVal[HRATOM].'">'. $dteDisplayTime->setTimestamp( $evtVal[HRATOM] )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</clockbegin>' . chr(13) . chr(10);
+	echo '  <event>' . chr(13) . chr(10) . '   <clockbegin atomic="'.$evtVal[HRATOM].'">'. $dteDisplayTime->setTimestamp( $evtVal[HRATOM] )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</clockbegin>' . chr(13) . chr(10);
 	echo '   <clockend atomic="'.$evtVal[HRATOM].'">'. $dteDisplayTime->setTimestamp( $evtVal[HRATOM] )->format( ( $blnVerbose ? 'Ymd ' : '').'H\hi' ) .'</clockend>' . chr(13) . chr(10);
 	echo '   <view>' . ($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=9?($intTransparencyAverage[ $evtKey ][AVGAVERAGE]>=5?($intSeeingAverage[ $evtKey ][AVGAVERAGE]>=5?'Clear, with little twinkle':'Clear, with some twinkle'):($intTransparencyAverage[ $evtKey ][AVGAVERAGE]>=4?($intSeeingAverage[ $evtKey ][AVGAVERAGE]>=5?'Clear, with a little haze but little twinkle':'Clear, with a little haze and some twinkle'):'Clear, with a lot of haze')):($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=7?'Mostly clear':($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=5?'Mostly cloudy':($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=3?'Too cloudy':($intCloudCoverAverage[ $evtKey ][AVGAVERAGE]>=0?'Overcast':'Unknown'))))) . '</view>' . chr(13) . chr(10);
 	echo '  </event>' . chr(13) . chr(10);
